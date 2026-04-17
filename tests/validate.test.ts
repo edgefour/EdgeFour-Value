@@ -57,7 +57,7 @@ describe('validateCalculateInput', () => {
   test('rejects revenue above max', () => {
     const r = validateCalculateInput({
       ...validInput,
-      revenue: 10_000_000_001,
+      revenue: 500_000_000_001,
     })
     expect(r.valid).toBe(false)
   })
@@ -70,7 +70,7 @@ describe('validateCalculateInput', () => {
   test('rejects ebitda below min', () => {
     const r = validateCalculateInput({
       ...validInput,
-      ebitda: -1_000_000_001,
+      ebitda: -500_000_000_001,
     })
     expect(r.valid).toBe(false)
   })

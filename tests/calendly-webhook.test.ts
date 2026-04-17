@@ -10,7 +10,7 @@ describe('calendly-webhook', () => {
         payload: {
           email: 'test@example.com',
           name: 'Jane Smith',
-          event_type: { uuid: 'calendly-event-123' },
+          event_type: { uuid: `calendly-event-${crypto.randomUUID()}` },
           scheduled_event: {
             start_time: '2026-05-01T14:00:00Z',
             end_time: '2026-05-01T14:30:00Z',
