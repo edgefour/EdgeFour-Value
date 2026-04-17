@@ -32,7 +32,6 @@ for env_file in "$MAIN_REPO"/.env*; do
   echo "Copied $basename"
 done
 
-echo "Running bun install..."
-cd "$WORKTREE_DIR"
-bun install
+ln -s "$MAIN_REPO/node_modules" "$WORKTREE_DIR/node_modules"
+echo "Linked node_modules"
 echo "Worktree setup complete: $WORKTREE_DIR"
