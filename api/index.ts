@@ -15,6 +15,7 @@ import {
   logError,
 } from './_lib/db.js'
 import { sendReport } from './_lib/send-email.js'
+import { buildReportEmail } from './_lib/email-template.js'
 import type {
   CalculateInput,
   SaveSessionRequest,
@@ -182,29 +183,53 @@ app.post('/submit-quiz', async (c) => {
       completed: true,
     })
 
-    // Send email (silent fail — don't block the user)
-    try {
-      const html = `<p>Stub email for ${body.email_content.business_name}</p>`
-
-      await sendReport({
-        session_id: body.session_id,
-        valuation_id: body.valuation_id,
-        recipient_email: body.lead_email,
-        business_name: body.email_content.business_name,
-        html,
-      })
-
-      await updateValuation(body.valuation_id, {
-        report_sent_at: new Date().toISOString(),
-      })
-    } catch (err) {
-      await logError(body.session_id, 'submit-quiz:email', String(err))
-    }
-
     return c.json({ ok: true })
   } catch (err) {
     await logError(null, 'submit-quiz', String(err))
     return c.json({ error: 'Internal server error' }, 500)
+  }
+})
+
+// ── send-report ────────────────────────────────────────────────────────────
+app.post('/send-report', async (c) => {
+  try {
+    const body = (await c.req.json()) as {
+      session_id: string
+      valuation_id: string
+      recipient_email: string
+      email_content: SubmitQuizRequest['email_content']
+    }
+
+    if (!body.session_id || !body.valuation_id || !body.recipient_email) {
+      return c.json(
+        { error: 'session_id, valuation_id, and recipient_email are required' },
+        400,
+      )
+    }
+
+    const emailCheck = validateEmail(body.recipient_email)
+    if (!emailCheck.valid) {
+      return c.json({ error: emailCheck.error }, 400)
+    }
+
+    const html = buildReportEmail(body.email_content)
+
+    await sendReport({
+      session_id: body.session_id,
+      valuation_id: body.valuation_id,
+      recipient_email: body.recipient_email,
+      business_name: body.email_content.business_name,
+      html,
+    })
+
+    await updateValuation(body.valuation_id, {
+      report_sent_at: new Date().toISOString(),
+    })
+
+    return c.json({ ok: true })
+  } catch (err) {
+    await logError(null, 'send-report', String(err))
+    return c.json({ error: 'Failed to send report' }, 500)
   }
 })
 
@@ -243,7 +268,29 @@ app.post('/track-event', async (c) => {
 // ── resend-webhook ──────────────────────────────────────────────────────────
 app.post('/resend-webhook', async (c) => {
   try {
-    const body = (await c.req.json()) as {
+    const rawBody = await c.req.text()
+
+    // Verify webhook signature
+    const webhookSecret = process.env.RESEND_WEBHOOK_SECRET
+    if (webhookSecret) {
+      const { Resend } = await import('resend')
+      const resend = new Resend(process.env.RESEND_API_KEY)
+      try {
+        resend.webhooks.verify({
+          payload: rawBody,
+          headers: {
+            id: c.req.header('svix-id') ?? '',
+            timestamp: c.req.header('svix-timestamp') ?? '',
+            signature: c.req.header('svix-signature') ?? '',
+          },
+          webhookSecret,
+        })
+      } catch {
+        return c.json({ error: 'Invalid webhook signature' }, 401)
+      }
+    }
+
+    const body = JSON.parse(rawBody) as {
       type: string
       data: { email_id: string }
     }
