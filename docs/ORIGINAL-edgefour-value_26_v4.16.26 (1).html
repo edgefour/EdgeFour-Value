@@ -1769,12 +1769,14 @@
     </div>
 
     <h1 class="landing-h1">Discover What Your<br>Business Is <em>Worth</em></h1>
-    <p class="landing-sub">Answer a few questions and get an instant valuation estimate — plus a clear roadmap to increase your business value before you sell.</p>
+    <p class="landing-sub">Many business owners have no idea what their business is actually worth — or what is quietly holding that number back. If the day ever comes to sell, it very well may be the biggest financial transaction of your life. Many owners arrive at that moment completely unprepared. This tool changes that.</p>
 
     <button class="cta-primary" onclick="showAwarenessPopup()">
       Start My Free Valuation
       <span class="cta-arrow">→</span>
     </button>
+    <p class="landing-revenue-note">(This tool is best suited for businesses with revenue of $1M – $30M)</p>
+
 
 
     <div class="landing-stats">
@@ -2040,10 +2042,12 @@
     <div class="form-header">
       <div class="step-tag">Step 2 of 3 — Financial Data</div>
       <h2 class="form-h2">Your financial<br>picture</h2>
-      <p class="form-sub">These numbers help us calculate your Adjusted EBITDA — the primary driver of your business valuation. Estimates are fine.</p>
+      <p class="form-sub">These inputs help us estimate your Adjusted EBITDA — the primary driver of your business valuation. Estimates are fine.</p>
+      <p class="form-sub form-sub-sm">EBITDA stands for Earnings Before Interest, Taxes, Depreciation, and Amortization. Adjusted EBITDA is a commonly used proxy for the cash flow available to a buyer, particularly for businesses that are not highly capital intensive or real estate–driven. An industry- and company-specific multiple is typically applied to Adjusted EBITDA to estimate enterprise value.</p>
+      <p class="form-sub-footnote"><strong>Note:</strong> Some valuation approaches use Seller's Discretionary Earnings (SDE), which includes owner compensation and discretionary expenses. Because SDE blends the cost of running the business with the earnings it generates, it can obscure the true cash flow available to a buyer. In our approach, Adjusted EBITDA normalizes owner compensation to a market-based level — reflecting the cost required to operate the business — so that earnings more accurately represent what can transfer to a new owner.</p>
     </div>
     <!-- Input mode toggle -->
-    <p class="mode-toggle-label">How would you like to enter your profit?</p>
+    <p class="mode-toggle-label">How would you like to enter your EBITDA?</p>
     <div class="mode-toggle-row">
       <button class="mode-btn active" id="mode-btn-know" onclick="setFinancialMode('know')">
         <div class="mode-btn-check"><div class="mode-btn-check-dot"></div></div>
@@ -2054,7 +2058,7 @@
   <line x1="7" y1="16" x2="13" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
 </svg></div>
         <div class="mode-btn-title">I know my EBITDA</div>
-        <div class="mode-btn-desc">Enter your revenue and profit directly</div>
+        <div class="mode-btn-desc">Enter your revenue and EBITDA directly</div>
       </button>
       <button class="mode-btn" id="mode-btn-calc" onclick="setFinancialMode('calc')">
         <div class="mode-btn-check"><div class="mode-btn-check-dot"></div></div>
@@ -2067,15 +2071,15 @@
   <circle cx="8.5" cy="18" r="1.5" fill="currentColor" opacity="0.7"/>
   <circle cx="15.5" cy="18" r="1.5" fill="currentColor" opacity="0.7"/>
 </svg></div>
-        <div class="mode-btn-title">Help me calculate it</div>
-        <div class="mode-btn-desc">Step-by-step from your revenue and costs</div>
+        <div class="mode-btn-title">Help me calculate my EBITDA</div>
+        <div class="mode-btn-desc">Step-by-step calculation of EBITDA</div>
       </button>
     </div>
 
     <!-- MODE A: Know your EBITDA -->
     <div class="form-card" id="mode-know">
       <div class="field-group">
-        <label for="revenue">Annual Revenue (Last 12 Months)</label>
+        <label for="revenue">Annual Revenue</label>
         <div class="prefix-input">
           <span class="prefix">$</span>
           <input type="text" id="revenue" inputmode="numeric" placeholder="e.g., 3,500,000" class="currency-input" autocomplete="off">
@@ -2083,22 +2087,40 @@
         <span class="helper">Your total top-line revenue before any expenses.</span>
       </div>
       <div class="field-group">
-        <label for="ebitda">Annual Operating Profit / EBITDA</label>
+        <label for="ebitda">Annual EBITDA</label>
         <div class="prefix-input">
           <span class="prefix">$</span>
           <input type="text" id="ebitda" inputmode="numeric" placeholder="e.g., 620,000" class="currency-input" autocomplete="off">
         </div>
-        <span class="helper">Earnings before interest, taxes, depreciation, and amortization.</span>
+        <span class="helper">Earnings Before Interest, Taxes, Depreciation, and Amortization. "Earnings" is the starting point, which may be referred to as Net Income or Net Profit on your income statement or Profit & Loss statement.</span>
       </div>
     </div>
 
     <!-- MODE B: Guided EBITDA calculator (industry-aware) -->
     <div class="form-card" id="mode-calc" style="display:none;">
+      <!-- Revenue field — sits above the EBITDA calculator, not an EBITDA input -->
+      <div class="field-group">
+        <label for="g-revenue-calc">Annual Revenue</label>
+        <div class="prefix-input">
+          <span class="prefix">$</span>
+          <input type="text" id="g-revenue-calc" inputmode="numeric" placeholder="e.g., 3,500,000" class="currency-input" autocomplete="off">
+        </div>
+        <span class="helper">Your total top-line revenue before any expenses.</span>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:8px 0 20px;">
       <div class="guided-intro">
-        <div class="guided-intro-icon" id="guided-intro-icon"></div>
+        <div class="guided-intro-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="3" y="3" width="18" height="18" rx="3" stroke="#2D4A7A" stroke-width="1.5" fill="none"/>
+  <rect x="6" y="6" width="5" height="3" rx="1" fill="#2D4A7A" opacity="0.8"/>
+  <rect x="13" y="6" width="5" height="3" rx="1" fill="#2D4A7A" opacity="0.8"/>
+  <circle cx="8.5" cy="13" r="1.5" fill="#2D4A7A" opacity="0.7"/>
+  <circle cx="15.5" cy="13" r="1.5" fill="#2D4A7A" opacity="0.7"/>
+  <circle cx="8.5" cy="18" r="1.5" fill="#2D4A7A" opacity="0.7"/>
+  <circle cx="15.5" cy="18" r="1.5" fill="#2D4A7A" opacity="0.7"/>
+</svg></div>
         <div>
-          <div class="guided-intro-title" id="guided-intro-title">Product Business Profit Calculator</div>
-          <div class="guided-intro-sub" id="guided-intro-sub">We'll build up your EBITDA from revenue down through your costs.</div>
+          <div class="guided-intro-title" id="guided-intro-title">Plain-English Profit Calculator</div>
+          <div class="guided-intro-sub" id="guided-intro-sub">We'll calculate your EBITDA from a few simple numbers. Estimates are fine.</div>
         </div>
       </div>
       <!-- Dynamic fields injected here by JS based on industry -->
@@ -2112,28 +2134,45 @@
     </div>
     <div class="form-card">
       <div class="field-group">
-        <label for="owner-salary">Owner's Total Annual Compensation</label>
+        <label for="owner-salary">Owner(s) Total Annual Compensation</label>
         <div class="prefix-input">
           <span class="prefix">$</span>
           <input type="text" id="owner-salary" inputmode="numeric" placeholder="e.g., 280,000" class="currency-input" autocomplete="off">
         </div>
-        <span class="helper">Total W-2 salary, distributions, and any other compensation paid to you through the business.</span>
+        <span class="helper">Enter total W-2 salary, bonuses, and any other compensation paid to owner(s) through the income statement (excludes owner distributions).</span>
+        <p class="form-sub-footnote"><strong>Note:</strong> This represents current owner compensation. We compare this to a market-based replacement cost to normalize earnings. Owner distributions (from retained earnings) are not included, as they reflect a return on ownership rather than a cost of operating the business.</p>
       </div>
       <div class="field-group">
-        <label for="market-salary">Market Rate for Your Role</label>
+        <label for="market-salary">Market Rate of Compensation for Owner(s) Role(s)</label>
         <div class="prefix-input">
           <span class="prefix">$</span>
           <input type="text" id="market-salary" inputmode="numeric" placeholder="e.g., 120,000" class="currency-input" autocomplete="off">
         </div>
-        <span class="helper">What would a qualified replacement manager or CEO cost to perform your day-to-day role? Only the <em>excess</em> above this market rate is treated as an add-back — we do not apply a full SDE (Seller's Discretionary Earnings) adjustment.</span>
+        <span class="helper">Enter the market-based compensation required to hire qualified replacement(s) to perform the owner's role(s) (e.g. CEO, GM, VP).</span>
+        <p class="form-sub-footnote"><strong>Note:</strong> This reflects the cost a new absentee owner would incur to operate the business and is used to adjust earnings to a transferable, market-based level.</p>
       </div>
       <div class="field-group">
-        <label for="addbacks">One-Time Add-Backs</label>
+        <label for="addbacks">Other Adjustments (Add-Backs / Subtractions)</label>
         <div class="prefix-input">
           <span class="prefix">$</span>
-          <input type="text" id="addbacks" inputmode="numeric" placeholder="e.g., 40,000" class="currency-input" autocomplete="off">
+          <input type="text" id="addbacks" inputmode="text" placeholder="e.g., 40,000 or -15,000" class="currency-input" autocomplete="off">
         </div>
-        <span class="helper">Non-recurring expenses run through the business (e.g., a one-time legal dispute, personal vehicle, family on payroll). Leave blank or enter $0 if none.</span>
+        <span class="helper">
+          Enter the total net amount of non-recurring or non-operating adjustments not already captured above.
+          Use a positive number to add back an expense
+          <span class="info-tooltip-wrap">
+            <span class="info-icon">i
+              <span class="info-tooltip"><strong>Positive add-backs</strong> — expenses that inflate costs and won't continue under new ownership: one-time legal settlements, personal vehicle, personal travel or meals, family members on payroll not in a real role, one-time equipment purchases, non-recurring losses.</span>
+            </span>
+          </span>
+          or a negative number to deduct income that won't continue
+          <span class="info-tooltip-wrap">
+            <span class="info-icon">i
+              <span class="info-tooltip"><strong>Negative subtractions</strong> — income or cost savings that won't continue under new ownership: below-market rent paid to an owner-related entity, non-recurring revenue that won't repeat, income from asset sales.</span>
+            </span>
+          </span>.
+        </span>
+        <p class="form-sub-footnote"><strong>Note:</strong> Exclude owner compensation (handled above). Include only non-recurring or non-operating items that would not continue, or be required to add, under new ownership. Adjustments should be reasonable, supportable, and reflective of ongoing earnings.</p>
       </div>
     </div>
     <!-- Adjusted EBITDA summary display -->
@@ -2143,17 +2182,6 @@
       <div class="adj-ebitda-value" id="adj-ebitda-preview-val">$0</div>
       <div id="adj-ebitda-margin-preview" style="display:none;font-size:11px;font-weight:600;color:var(--gold-light);margin-top:6px;text-align:center;letter-spacing:0.3px;"></div>
       <div style="font-size:12px;color:var(--slate-light);margin-top:6px;text-align:center;">This is your Adjusted EBITDA — the primary driver of your business valuation.</div>
-    </div>
-
-    <!-- Revenue Growth slider (bottom of financials) -->
-    <div class="form-card">
-      <div class="field-group slider-field">
-        <label>3-Year Revenue Growth Rate</label>
-        <div class="slider-value-display" id="growth-display">Stable (0–5%)</div>
-        <input type="range" id="growth" min="1" max="5" value="3" oninput="updateSliderLabel('growth','growth-display',growthLabels)">
-        <div class="slider-labels"><span>Declining</span><span>Hypergrowth</span></div>
-        <span class="helper">How has revenue trended over the past 3 years?</span>
-      </div>
     </div>
 
     <div class="form-nav">
@@ -2173,55 +2201,64 @@
       <h2 class="form-h2">What drives your<br>business value</h2>
       <p class="form-sub">These qualitative factors can significantly increase or decrease what a buyer is willing to pay.</p>
     </div>
-    <!-- Card 1: Owner Dependency + Recurring Revenue -->
     <div class="form-card">
+      <!-- Revenue Growth (moved from Financials) -->
       <div class="field-group slider-field">
-        <label>Owner Dependency</label>
-        <div class="slider-value-display" id="owner-dep-display">Moderate</div>
-        <input type="range" id="owner-dep" min="1" max="5" value="3" oninput="updateSliderLabel('owner-dep','owner-dep-display',ownerDepLabels)">
-        <div class="slider-labels"><span>Fully dependent on me</span><span>Runs without me</span></div>
-        <span class="helper">How much does the business rely on you personally day-to-day? High owner dependency reduces value.</span>
+        <label>3-Year Revenue Growth Rate</label>
+        <div class="slider-value-display" id="growth-display">Stable (2–5%)</div>
+        <input type="range" id="growth" min="1" max="5" value="3" oninput="updateSliderLabel('growth','growth-display',growthLabels)">
+        <div class="slider-labels"><span>Declining</span><span>Hypergrowth</span></div>
+        <span class="helper">How has revenue trended over the past 3 years?</span>
       </div>
+    </div>
+    <div class="form-card">
+      <!-- Owner Dependency / Management Team Strength (combined) -->
+      <div class="field-group slider-field">
+        <label>Owner Dependency / Management Team Strength</label>
+        <div class="slider-value-display" id="owner-dep-display">Some management leadership, but owner(s) make most decisions</div>
+        <input type="range" id="owner-dep" min="1" max="5" value="3" oninput="updateSliderLabel('owner-dep','owner-dep-display',ownerDepLabels)">
+        <div class="slider-labels"><span>Fully dependent on owner(s);<br>no managerial senior staff</span><span>Runs without owner(s);<br>strong management team</span></div>
+        <span class="helper">How much does the business rely on the owner(s) day-to-day? Do you have managers or leaders who could continue operating the business without the owner(s)? High owner dependency reduces value.</span>
+      </div>
+    </div>
+    <div class="form-card">
+      <!-- Recurring Revenue -->
       <div class="field-group slider-field">
         <label>Recurring Revenue Percentage</label>
-        <div class="slider-value-display" id="recurring-display">10–25%</div>
+        <div class="slider-value-display" id="recurring-display">25–50%</div>
         <input type="range" id="recurring" min="1" max="5" value="2" oninput="updateSliderLabel('recurring','recurring-display',recurringLabels)">
         <div class="slider-labels"><span>All one-time</span><span>Mostly recurring</span></div>
         <span class="helper">Contracts, subscriptions, retainers, or repeat customers that create predictable revenue.</span>
       </div>
     </div>
-    <!-- Card 2: Customer Concentration -->
     <div class="form-card">
+      <!-- Customer Concentration -->
       <div class="field-group slider-field">
         <label>Largest Customer Revenue Concentration</label>
-        <div class="slider-value-display" id="cust-conc-display">5–10%</div>
+        <div class="slider-value-display" id="cust-conc-display">10–25%</div>
         <input type="range" id="cust-conc" min="1" max="5" value="2" oninput="updateSliderLabel('cust-conc','cust-conc-display',custConcLabels)">
         <div class="slider-labels"><span>&lt;5% (spread out)</span><span>&gt;50% (one big client)</span></div>
         <span class="helper">What percentage of revenue comes from your single largest customer? Lower is better for valuation.</span>
       </div>
     </div>
-    <!-- Card 3: Systems + Management Team + Financial Records -->
     <div class="form-card">
+      <!-- Systems Maturity -->
       <div class="field-group slider-field">
-        <label>Systems &amp; Process Maturity</label>
+        <label>Systems & Process Maturity</label>
         <div class="slider-value-display" id="systems-display">Partially documented</div>
         <input type="range" id="systems" min="1" max="5" value="3" oninput="updateSliderLabel('systems','systems-display',systemsLabels)">
-        <div class="slider-labels"><span>Everything in my head</span><span>Fully documented SOPs</span></div>
-        <span class="helper">How well are your operations, workflows, and processes documented and followed by staff?</span>
+        <div class="slider-labels"><span>Everything in owner(s) head</span><span>Fully documented SOPs;<br>leverage CRM, ERP, or POS</span></div>
+        <span class="helper">How well are your operations, workflows, and processes documented and followed by staff — and how well is the business data managed?</span>
       </div>
+    </div>
+    <div class="form-card">
+      <!-- Financial Records -->
       <div class="field-group slider-field">
-        <label>Management Team Strength</label>
-        <div class="slider-value-display" id="mgmt-display">Some leadership</div>
-        <input type="range" id="mgmt" min="1" max="5" value="3" oninput="updateSliderLabel('mgmt','mgmt-display',mgmtLabels)">
-        <div class="slider-labels"><span>Only me</span><span>Strong team in place</span></div>
-        <span class="helper">Do you have managers or leaders who could continue operating the business without you?</span>
-      </div>
-      <div class="field-group slider-field">
-        <label>Financial Record Quality</label>
+        <label>Financial Record &amp; Underlying Operational Data Quality</label>
         <div class="slider-value-display" id="fin-records-display">Adequate bookkeeping</div>
         <input type="range" id="fin-records" min="1" max="5" value="3" oninput="updateSliderLabel('fin-records','fin-records-display',finRecordsLabels)">
-        <div class="slider-labels"><span>Messy / incomplete</span><span>CPA-reviewed or audited</span></div>
-        <span class="helper">Clean, well-organized financials build buyer confidence and reduce perceived risk.</span>
+        <div class="slider-labels"><span>Messy / incomplete</span><span>CPA-reviewed or audited financials;<br>detailed operational data records</span></div>
+        <span class="helper">Accurate, well-organized financials and underlying operational data (including availability of detailed sales and purchase records) build buyer confidence and reduce perceived risk.</span>
       </div>
     </div>
     <div class="form-nav">
@@ -2290,7 +2327,7 @@
 
     <!-- Trajectory Projection -->
     <div class="trajectory-card fade-in-delay-3" id="trajectory-card">
-      <h3>Your Value Improvement Potential</h3>
+      <h3>What Your Business Could Be Worth</h3>
       <p class="traj-context">Most owners are surprised by the gap between the value of their company today and the value it could be after making just 2 key improvements. The good news: business value can be improved significantly with the right focus and enough lead time.</p>
       <div class="trajectory-row">
         <div class="traj-col">
@@ -2307,33 +2344,28 @@
       <div class="traj-actions" id="traj-actions"></div>
     </div>
 
-    <!-- CTA into VIP quiz -->
-    <div class="cta-card fade-in-delay-4">
-      <h3>Want a Tailored Improvement Plan?</h3>
-      <p>Answer 4 quick questions to unlock a personalized roadmap showing exactly how to increase your business value.</p>
-      <button class="btn-cta-book" onclick="goTo('section-vip-quiz')">
-        Unlock My Value Improvement Plan →
-      </button>
-    </div>
-
     <!-- Factors -->
-    <div class="factors-grid fade-in-delay-5">
+    <div class="factors-grid fade-in-delay-4">
       <div class="factors-card good">
-        <h3>✓ Helping Your Value</h3>
+        <h3>✓ What Buyers Will Pay a Premium For</h3>
         <div id="factors-good"></div>
       </div>
       <div class="factors-card bad">
-        <h3>✗ Hurting Your Value</h3>
+        <h3>✗ What Buyers Will Discount Value For</h3>
         <div id="factors-bad"></div>
       </div>
     </div>
 
-    <!-- Recommendations -->
-    <div class="recs-card fade-in-delay-5">
-      <h3>How to Increase Your Value</h3>
-      <div id="results-recommendations"></div>
+    <!-- CTA into VIP quiz -->
+    <div class="cta-card fade-in-delay-4">
+      <h3>You Now Know More Than Many Business Owners Ever Do.</h3>
+      <p>Many owners operate in a complete information desert when it comes to the value of what they have built. They run their business for decades, and if the day ever comes to sell — which for many is the single largest financial transaction of their lives — they arrive completely unprepared. You just changed that. Answer 3 quick questions to get a personalized roadmap for making the most of what you have built.</p>
+      <button class="btn-cta-book" onclick="goTo('section-vip-quiz')">
+        Show Me How to Increase My Value →
+      </button>
     </div>
 
+    <button class="btn-back-section" onclick="goTo('section-value-drivers')">← Back to My Inputs</button>
     <button class="btn-restart" onclick="confirmRestart('results')">← Start a New Valuation</button>
     <div class="disclaimer">This valuation is a preliminary estimate based solely on the information you provided and is for informational purposes only. It does not constitute a formal valuation, appraisal, or opinion of value, and should not be relied upon for any transaction, tax, legal, or financial decision. Actual business value may vary significantly based on additional factors, including but not limited to detailed financial review, market conditions, industry dynamics, and buyer-specific considerations. For a formal valuation or transaction-related advice, you should consult a qualified advisor.</div>
   </div>
@@ -2510,15 +2542,15 @@
   </div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ---- SLIDER LABELS ----
-const growthLabels    = ['Declining (< 0%)','Flat (0–2%)','Stable (0–5%)','Growing (5–15%)','Hypergrowth (15%+)'];
-const ownerDepLabels  = ['Fully dependent','Highly dependent','Moderate','Low dependency','Runs independently'];
+const growthLabels    = ['Declining (< 0%)','Flat (0–2%)','Stable (2–5%)','Growing (5–15%)','Hypergrowth (15%+)'];
+const ownerDepLabels  = ['Just owner(s); difficult to leave','Owner(s) rarely away, but 1–2 senior staff','Some management leadership, but owner(s) make most decisions','Experienced team; key staff lead','Strong non-owner leadership; business runs without owner(s)'];
 const recurringLabels = ['< 10%','10–25%','25–50%','50–75%','75%+ recurring'];
 const custConcLabels  = ['< 5% (spread out)','5–10%','10–25%','25–50%','> 50% (high risk)'];
-const systemsLabels   = ['None documented','Basic notes','Partially documented','Most processes documented','Full SOPs + training'];
-const mgmtLabels      = ['No team','Minimal support','Some leadership','Strong team','Full leadership team'];
-const finRecordsLabels= ['Unclear / messy','Basic bookkeeping','Adequate bookkeeping','Clean QuickBooks/CPA','Reviewed or audited financials'];
+const systemsLabels   = ['None documented; no software systems','Basic notes','Partially documented; some use of software systems','Most processes documented; software systems in place','Full SOPs + training; extensive use of software platform'];
+// mgmtLabels removed — combined into ownerDepLabels
+const finRecordsLabels= ['Unclear / messy','Basic bookkeeping & customer records','Adequate bookkeeping & customer records','Clean QuickBooks/CPA; most underlying operational data available','Reviewed or audited financials; complete underlying operational data'];
 
 function updateSliderLabel(sliderId, displayId, labels) {
   const val = parseInt(document.getElementById(sliderId).value);
@@ -2531,7 +2563,6 @@ updateSliderLabel('owner-dep','owner-dep-display',ownerDepLabels);
 updateSliderLabel('recurring','recurring-display',recurringLabels);
 updateSliderLabel('cust-conc','cust-conc-display',custConcLabels);
 updateSliderLabel('systems','systems-display',systemsLabels);
-updateSliderLabel('mgmt','mgmt-display',mgmtLabels);
 updateSliderLabel('fin-records','fin-records-display',finRecordsLabels);
 
 // ---- NAVIGATION ----
@@ -2858,7 +2889,7 @@ function calculateAndShow() {
   const recurring   = parseInt(document.getElementById('recurring').value);
   const custConc    = parseInt(document.getElementById('cust-conc').value);
   const systems     = parseInt(document.getElementById('systems').value);
-  const mgmt        = parseInt(document.getElementById('mgmt').value);
+  // mgmt slider removed — combined into owner-dep
   const finRec      = parseInt(document.getElementById('fin-records').value);
 
   // Compensation adjustment: positive when owner is overpaid (add back excess),
@@ -3016,9 +3047,8 @@ function calculateAndShow() {
   const systemsAdj = [-0.6, -0.3, 0, 0.3, 0.7];
   multipleAdj += systemsAdj[systems - 1];
 
-  // Management team: 1=just me(-0.8), 5=strong team(+0.8)
-  const mgmtAdj = [-0.8, -0.4, 0, 0.4, 0.8];
-  multipleAdj += mgmtAdj[mgmt - 1];
+  // Management: 1=just me(-0.8), 5=strong team(+0.8)
+  // mgmtAdj removed — combined into ownerDep slider
 
   // Financial records: 1=messy(-0.5), 5=audited(+0.4)
   const finRecAdj = [-0.5, -0.2, 0, 0.2, 0.4];
@@ -3051,8 +3081,7 @@ function calculateAndShow() {
     return adjArray[targetIdx] - adjArray[currentIdx - 1];
   }
   const factorImpacts = [
-    { name: 'Reduce owner dependency',         delta: clampDelta(ownerDepAdj, ownerDep), poor: ownerDep <= 3 },
-    { name: 'Build management team',           delta: clampDelta(mgmtAdj, mgmt),         poor: mgmt <= 3 },
+    { name: 'Reduce owner dependency & build management team', delta: clampDelta(ownerDepAdj, ownerDep), poor: ownerDep <= 3 },
     { name: 'Build recurring revenue',         delta: clampDelta(recurringAdj, recurring), poor: recurring <= 3 },
     { name: 'Diversify customer base',         delta: clampDelta(custConcAdj.slice().reverse(), 6-custConc), poor: custConc >= 3 },
     { name: 'Document systems & processes',    delta: clampDelta(systemsAdj, systems),    poor: systems <= 3 },
@@ -3070,13 +3099,14 @@ function calculateAndShow() {
 
   // Score out of 100
   let score = 50;
-  score += growthAdj[growth - 1] * 10;       // growth
-  score += ownerDepAdj[ownerDep - 1] * 7;    // owner dependency
-  score += mgmtAdj[mgmt - 1] * 7;            // management team strength
-  score += recurringAdj[recurring - 1] * 10; // recurring revenue
-  score += custConcAdj[custConc - 1] * 8;    // customer concentration
-  score += systemsAdj[systems - 1] * 8;      // systems & process maturity
-  score += finRecAdj[finRec - 1] * 6;        // financial record quality
+  score += growthAdj[growth - 1] * 11;       // growth — highest tier
+  score += ownerDepAdj[ownerDep - 1] * 12;   // owner dep + mgmt team combined — modest bump from 8
+  score += recurringAdj[recurring - 1] * 11; // recurring revenue — highest tier
+  score += custConcAdj[custConc - 1] * 9;    // customer concentration
+  score += systemsAdj[systems - 1] * 9;      // systems & process maturity
+  score += finRecAdj[finRec - 1] * 7;        // financial record quality
+  // Note: margin bonus removed — score is now fully driven by the 7 explicit
+  // value driver sliders, making it 100% transparent and reproducible.
   if (years >= 10) score += 5;
   score = Math.min(100, Math.max(10, Math.round(score)));
 
@@ -3089,13 +3119,10 @@ function calculateAndShow() {
   else if (growth <= 2) badFactors.push('Flat or declining revenue reduces buyer confidence');
   else badFactors.push('Moving sales growth beyond low single percentages will attract more buyers');
 
-  // ── OWNER DEPENDENCY ────────────────────────────────────────────────────────
-  if (ownerDep >= 4) goodFactors.push('Low owner dependency means the business can run without you');
-  else if (ownerDep <= 2) badFactors.push('High owner dependency creates transition risk for buyers');
-
-  // ── MANAGEMENT TEAM ────────────────────────────────────────────────────────
-  if (mgmt >= 4) goodFactors.push('Strong management team increases buyer confidence in continuity');
-  else if (mgmt <= 2) badFactors.push('Thin management team creates risk for buyers post-transition');
+  // ── OWNER DEPENDENCY / MANAGEMENT TEAM ──────────────────────────────────────
+  if (ownerDep >= 4) goodFactors.push('Low owner dependency/strong management means the business can run without you');
+  else if (ownerDep <= 2) badFactors.push('High owner dependency/thin management creates transition risk for buyers');
+  else badFactors.push('Less owner dependence or stronger management staff will increase buyer confidence and value');
 
   // ── RECURRING REVENUE ────────────────────────────────────────────────────────
   if (recurring >= 4) goodFactors.push('High recurring revenue increases predictability and value');
@@ -3138,7 +3165,6 @@ function calculateAndShow() {
     recurring: clampDelta(recurringAdj,recurring),
     custConc:  clampDelta(custConcAdj.slice().reverse(), 6 - custConc),
     ownerDep:  clampDelta(ownerDepAdj, ownerDep),
-    mgmt:      clampDelta(mgmtAdj,     mgmt),
   };
 
   const allRecs = [
@@ -3291,18 +3317,7 @@ function calculateAndShow() {
     `<div class="factor-item"><div class="factor-dot"></div><span>${f}</span></div>`
   ).join('');
 
-  // Recs — results page (numbered circles)
-  document.getElementById('results-recommendations').innerHTML = recs.map((r, i) =>
-    `<div class="rec-item">
-      <div class="rec-diamond" style="background:var(--gold);color:var(--navy);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">${i+1}</div>
-      <div class="rec-content">
-        <div class="rec-title">${r.title}</div>
-        <div class="rec-desc">${r.desc}</div>
-      </div>
-    </div>`
-  ).join('');
-
-  // Recs — snapshot page (diamonds)
+  // Recs
   document.getElementById('recommendations').innerHTML = recs.map((r) =>
     `<div class="rec-item">
       <div class="rec-diamond">◆</div>
@@ -3346,7 +3361,6 @@ function calculateAndShow() {
     recurring_slider:   recurring,
     cust_conc_slider:   custConc,
     systems_slider:     systems,
-    mgmt_slider:        mgmt,
     fin_records_slider: finRec,
   });
 
@@ -3397,7 +3411,7 @@ function restartApp() {
   updateSliderLabel('recurring','recurring-display',recurringLabels);
   updateSliderLabel('cust-conc','cust-conc-display',custConcLabels);
   updateSliderLabel('systems','systems-display',systemsLabels);
-  updateSliderLabel('mgmt','mgmt-display',mgmtLabels);
+  // mgmt slider reset removed — combined into owner-dep
   updateSliderLabel('fin-records','fin-records-display',finRecordsLabels);
   goTo('section-landing');
 }
@@ -3552,181 +3566,30 @@ function buildSnapshot() {
 // ---- FINANCIAL INPUT MODE TOGGLE ----
 // ---- INDUSTRY-AWARE GUIDED EBITDA CALCULATOR ----
 
-// Industry-aware guided EBITDA calculators
-// Product businesses: Revenue - COGS - OpEx + D&A
-// Service businesses: Revenue - OpEx + D&A
-// Default fallback: Revenue - COGS - OpEx + D&A (product-style)
+// Universal EBITDA Calculator — simplified E+I+T+D&A approach for all industries
+// This replaces the industry-specific calculators with a single universal approach
+// that mirrors standard accounting: Earnings + Interest + Taxes + D&A = EBITDA
 
-const GUIDED_CONFIGS = {
-  _product: {
-    icon: '🧮',
-    title: 'Product Business Profit Calculator',
-    sub: "We'll build up your EBITDA from revenue down through your costs.",
-    fields: [
-      { id:'g-revenue-calc', label:'Annual Revenue (Net Sales)', placeholder:'e.g., 4,200,000', sign:+1,
-        helper:'Total product sales, net of returns and discounts.' },
-      { id:'g-cogs', label:'Cost of Goods Sold', placeholder:'e.g., 1,800,000', sign:-1,
-        helper:'Raw materials, purchased inventory, direct manufacturing labor, and freight-in.' },
-      { id:'g-opex', label:'Operating Expenses (SG&A)', placeholder:'e.g., 950,000', sign:-1,
-        helper:'Salaries (non-production), rent, utilities, insurance, marketing, and admin overhead.' },
-      { id:'g-da', label:'Depreciation & Amortization (add back)', placeholder:'e.g., 60,000', sign:+1,
-        helper:'Non-cash charge from your P&L for equipment, machinery, or patents. Add it back to get EBITDA.' },
-    ],
-    formula: 'EBITDA = Revenue − COGS − OpEx + D&A',
-  },
-  _service: {
-    icon: '🧮',
-    title: 'Service Business Profit Calculator',
-    sub: "We'll build up your EBITDA from revenue down through your costs.",
-    fields: [
-      { id:'g-revenue-calc', label:'Annual Revenue', placeholder:'e.g., 2,500,000', sign:+1,
-        helper:'Total service revenue for the last 12 months.' },
-      { id:'g-opex', label:'Total Operating Expenses', placeholder:'e.g., 1,800,000', sign:-1,
-        helper:'All operating costs: payroll, rent, utilities, insurance, marketing, supplies, and admin.' },
-      { id:'g-da', label:'Depreciation & Amortization (add back)', placeholder:'e.g., 30,000', sign:+1,
-        helper:'Non-cash charge from your P&L for equipment or vehicles. Add it back to get EBITDA.' },
-    ],
-    formula: 'EBITDA = Revenue − Operating Expenses + D&A',
-  },
-  _retail: {
-    icon: '🧮',
-    title: 'Retail Business Profit Calculator',
-    sub: "We'll build up your EBITDA from revenue down through your costs.",
-    fields: [
-      { id:'g-revenue-calc', label:'Annual Revenue (Net Sales)', placeholder:'e.g., 3,200,000', sign:+1,
-        helper:'Total retail sales, net of returns and discounts.' },
-      { id:'g-cogs', label:'Cost of Goods Sold', placeholder:'e.g., 1,600,000', sign:-1,
-        helper:'Wholesale cost of inventory purchased for resale.' },
-      { id:'g-opex', label:'Operating Expenses (SG&A)', placeholder:'e.g., 800,000', sign:-1,
-        helper:'Salaries, rent, utilities, insurance, marketing, and admin overhead.' },
-      { id:'g-da', label:'Depreciation & Amortization (add back)', placeholder:'e.g., 40,000', sign:+1,
-        helper:'Non-cash charge from your P&L for fixtures, equipment, or leasehold improvements.' },
-    ],
-    formula: 'EBITDA = Revenue − COGS − OpEx + D&A',
-  },
-  _restaurant: {
-    icon: '🧮',
-    title: 'Restaurant Profit Calculator',
-    sub: "We'll build up your EBITDA from revenue down through your costs.",
-    fields: [
-      { id:'g-revenue-calc', label:'Annual Revenue (Net Sales)', placeholder:'e.g., 1,800,000', sign:+1,
-        helper:'Total food and beverage sales.' },
-      { id:'g-cogs', label:'Cost of Goods Sold (Food & Beverage)', placeholder:'e.g., 540,000', sign:-1,
-        helper:'Food, beverage, and supply costs.' },
-      { id:'g-opex', label:'Operating Expenses', placeholder:'e.g., 900,000', sign:-1,
-        helper:'Labor, rent, utilities, insurance, marketing, and other overhead.' },
-      { id:'g-da', label:'Depreciation & Amortization (add back)', placeholder:'e.g., 35,000', sign:+1,
-        helper:'Non-cash charge for kitchen equipment, furniture, and leasehold improvements.' },
-    ],
-    formula: 'EBITDA = Revenue − COGS − OpEx + D&A',
-  },
-  _construction: {
-    icon: '🧮',
-    title: 'Construction Business Profit Calculator',
-    sub: "We'll build up your EBITDA from revenue down through your costs.",
-    fields: [
-      { id:'g-revenue-calc', label:'Annual Revenue', placeholder:'e.g., 5,000,000', sign:+1,
-        helper:'Total contract revenue for the last 12 months.' },
-      { id:'g-cogs', label:'Direct Job Costs', placeholder:'e.g., 3,200,000', sign:-1,
-        helper:'Materials, subcontractors, direct labor, and equipment rental.' },
-      { id:'g-opex', label:'Overhead / G&A', placeholder:'e.g., 800,000', sign:-1,
-        helper:'Office staff, insurance, rent, vehicles, and admin overhead.' },
-      { id:'g-da', label:'Depreciation & Amortization (add back)', placeholder:'e.g., 80,000', sign:+1,
-        helper:'Non-cash charge for equipment, vehicles, and tools.' },
-    ],
-    formula: 'EBITDA = Revenue − Job Costs − Overhead + D&A',
-  },
-  _healthcare: {
-    icon: '🧮',
-    title: 'Healthcare Practice Profit Calculator',
-    sub: "We'll build up your EBITDA from collections down through your costs.",
-    fields: [
-      { id:'g-revenue-calc', label:'Annual Net Collections', placeholder:'e.g., 2,000,000', sign:+1,
-        helper:'Total revenue collected after insurance adjustments.' },
-      { id:'g-opex', label:'Total Operating Expenses', placeholder:'e.g., 1,400,000', sign:-1,
-        helper:'Staff payroll, rent, supplies, insurance, billing, and admin overhead.' },
-      { id:'g-da', label:'Depreciation & Amortization (add back)', placeholder:'e.g., 50,000', sign:+1,
-        helper:'Non-cash charge for medical equipment, furniture, and leasehold improvements.' },
-    ],
-    formula: 'EBITDA = Net Collections − Operating Expenses + D&A',
-  },
-  _professional: {
-    icon: '🧮',
-    title: 'Professional Services Profit Calculator',
-    sub: "We'll build up your EBITDA from revenue down through your costs.",
-    fields: [
-      { id:'g-revenue-calc', label:'Annual Revenue', placeholder:'e.g., 1,500,000', sign:+1,
-        helper:'Total fees and billings for the last 12 months.' },
-      { id:'g-opex', label:'Total Operating Expenses', placeholder:'e.g., 1,000,000', sign:-1,
-        helper:'Staff payroll, rent, technology, insurance, marketing, and admin.' },
-      { id:'g-da', label:'Depreciation & Amortization (add back)', placeholder:'e.g., 20,000', sign:+1,
-        helper:'Non-cash charge for office equipment, software, and leasehold improvements.' },
-    ],
-    formula: 'EBITDA = Revenue − Operating Expenses + D&A',
-  },
-  _technology: {
-    icon: '🧮',
-    title: 'Technology Business Profit Calculator',
-    sub: "We'll build up your EBITDA from revenue down through your costs.",
-    fields: [
-      { id:'g-revenue-calc', label:'Annual Revenue', placeholder:'e.g., 3,000,000', sign:+1,
-        helper:'Total revenue including subscriptions, licenses, and services.' },
-      { id:'g-opex', label:'Total Operating Expenses', placeholder:'e.g., 2,200,000', sign:-1,
-        helper:'Engineering, sales, marketing, hosting, rent, and admin overhead.' },
-      { id:'g-da', label:'Depreciation & Amortization (add back)', placeholder:'e.g., 100,000', sign:+1,
-        helper:'Non-cash charge for servers, equipment, and capitalized software development.' },
-    ],
-    formula: 'EBITDA = Revenue − Operating Expenses + D&A',
-  },
-  _ecommerce: {
-    icon: '🧮',
-    title: 'E-Commerce Profit Calculator',
-    sub: "We'll build up your EBITDA from revenue down through your costs.",
-    fields: [
-      { id:'g-revenue-calc', label:'Annual Revenue (Net Sales)', placeholder:'e.g., 2,800,000', sign:+1,
-        helper:'Total sales net of returns, refunds, and marketplace fees.' },
-      { id:'g-cogs', label:'Cost of Goods Sold', placeholder:'e.g., 1,200,000', sign:-1,
-        helper:'Product cost, packaging, and inbound freight.' },
-      { id:'g-opex', label:'Operating Expenses', placeholder:'e.g., 900,000', sign:-1,
-        helper:'Advertising, fulfillment, software, staff, and admin overhead.' },
-      { id:'g-da', label:'Depreciation & Amortization (add back)', placeholder:'e.g., 25,000', sign:+1,
-        helper:'Non-cash charge for warehouse equipment, software, etc.' },
-    ],
-    formula: 'EBITDA = Revenue − COGS − OpEx + D&A',
-  },
-  _logistics: {
-    icon: '🧮',
-    title: 'Logistics Business Profit Calculator',
-    sub: "We'll build up your EBITDA from revenue down through your costs.",
-    fields: [
-      { id:'g-revenue-calc', label:'Annual Revenue', placeholder:'e.g., 4,000,000', sign:+1,
-        helper:'Total hauling, brokerage, or warehousing revenue.' },
-      { id:'g-cogs', label:'Direct Costs', placeholder:'e.g., 2,400,000', sign:-1,
-        helper:'Fuel, driver pay, maintenance, tolls, and carrier payments.' },
-      { id:'g-opex', label:'Overhead / G&A', placeholder:'e.g., 800,000', sign:-1,
-        helper:'Office staff, insurance, rent, dispatch, and admin overhead.' },
-      { id:'g-da', label:'Depreciation & Amortization (add back)', placeholder:'e.g., 200,000', sign:+1,
-        helper:'Non-cash charge for trucks, trailers, and warehouse equipment.' },
-    ],
-    formula: 'EBITDA = Revenue − Direct Costs − Overhead + D&A',
-  },
-  _default: {
-    icon: '🧮',
-    title: 'Business Profit Calculator',
-    sub: "We'll build up your EBITDA from revenue down through your costs.",
-    fields: [
-      { id:'g-revenue-calc', label:'Annual Revenue', placeholder:'e.g., 3,000,000', sign:+1,
-        helper:'Total revenue for the last 12 months.' },
-      { id:'g-cogs', label:'Cost of Goods Sold', placeholder:'e.g., 1,200,000', sign:-1,
-        helper:'Direct costs of products or services delivered. Enter $0 if not applicable.' },
-      { id:'g-opex', label:'Operating Expenses (SG&A)', placeholder:'e.g., 900,000', sign:-1,
-        helper:'Salaries, rent, utilities, insurance, marketing, and admin overhead.' },
-      { id:'g-da', label:'Depreciation & Amortization (add back)', placeholder:'e.g., 50,000', sign:+1,
-        helper:'Non-cash charge from your P&L. Add it back to get EBITDA.' },
-    ],
-    formula: 'EBITDA = Revenue − COGS − OpEx + D&A',
-  },
+const GUIDED_UNIVERSAL = {
+  title: 'EBITDA Calculator',
+  sub: `EBITDA starts with earnings, then adds back interest, taxes, depreciation, and amortization. Estimates are fine.`,
+  revenueField: { id:'g-revenue-calc', label:'Annual Revenue', placeholder:'e.g., 3,500,000',
+    helper:'Your total top-line revenue before any expenses.' },
+  fields: [
+    { id:'g-earnings', label:'Annual Earnings (Net Income)', placeholder:'e.g., 180,000', sign:+1,
+      helper:'Enter your earnings, otherwise known as Net Income or Net Profit from your income statement or Profit & Loss statement.' },
+    { id:'g-interest', label:'Interest', placeholder:'e.g., 25,000', sign:+1,
+      helper:'Enter total interest expense on business debt.<br><span class="field-note"><strong>Note:</strong> This will be added back in the EBITDA calculation, as financing decisions vary by owner and are not part of operating performance.</span>' },
+    { id:'g-taxes', label:'Taxes', placeholder:'e.g., 40,000', sign:+1,
+      helper:'If Earnings include the payment of any state or federal income taxes, enter here.<br><span class="field-note"><strong>Note:</strong> This will be added back, as tax structures vary by owner and entity type.</span>' },
+    { id:'g-da', label:'Depreciation & Amortization', placeholder:'e.g., 30,000', sign:+1,
+      helper:'Enter total depreciation and amortization expense.<br><span class="field-note"><strong>Note:</strong> These are non-cash expenses and will be added back to reflect operating earnings before capital structure and accounting treatments.</span>' },
+  ],
+  formula: 'EBITDA = Earnings (Net Income) + Interest + Taxes + Depreciation & Amortization',
 };
+
+// Keep GUIDED_CONFIGS as alias for backward compatibility
+const GUIDED_CONFIGS = {};
 
 // Map all industries to the universal calculator
 const INDUSTRY_TO_CONFIG = {
@@ -3853,8 +3716,8 @@ function getGuidedConfig() {
 }
 
 function renderGuidedFields() {
-  const cfg = getGuidedConfig() || GUIDED_CONFIGS._default;
-  document.getElementById('guided-intro-icon').textContent  = cfg.icon || '🧮';
+  // Use the universal EBITDA calculator for all industries
+  const cfg = GUIDED_UNIVERSAL;
   document.getElementById('guided-intro-title').textContent = cfg.title;
   document.getElementById('guided-intro-sub').textContent   = cfg.sub;
 
@@ -3879,14 +3742,6 @@ function renderGuidedFields() {
   recalcGuided();
 }
 
-function clearGuidedFields() {
-  // Clear any dynamically-rendered guided calculator fields
-  const container = document.getElementById('guided-fields');
-  if (container) {
-    container.querySelectorAll('input').forEach(el => el.value = '');
-  }
-}
-
 function setFinancialMode(mode) {
   const knowBtn  = document.getElementById('mode-btn-know');
   const calcBtn  = document.getElementById('mode-btn-calc');
@@ -3898,17 +3753,18 @@ function setFinancialMode(mode) {
     calcBtn.classList.remove('active');
     knowCard.style.display = 'block';
     calcCard.style.display = 'none';
-    ['revenue','ebitda'].forEach(id => {
+    // Clear ALL financial fields — both Mode A and Mode B
+    ['revenue','ebitda','g-revenue-calc','g-earnings','g-interest','g-taxes','g-da'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = '';
     });
-    clearGuidedFields();
   } else {
     calcBtn.classList.add('active');
     knowBtn.classList.remove('active');
     calcCard.style.display = 'block';
     knowCard.style.display = 'none';
-    ['revenue','ebitda'].forEach(id => {
+    // Clear ALL financial fields — both Mode A and Mode B
+    ['revenue','ebitda','g-revenue-calc','g-earnings','g-interest','g-taxes','g-da'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = '';
     });
@@ -3923,33 +3779,31 @@ function setFinancialMode(mode) {
 }
 
 function calcGuidedEbitda() {
-  const cfg = getGuidedConfig() || GUIDED_CONFIGS._default;
+  // Universal E+I+T+DA approach: EBITDA = Earnings + Interest + Taxes + D&A
+  const cfg = GUIDED_UNIVERSAL;
   let ebitda = 0;
   cfg.fields.forEach(f => {
     const el = document.getElementById(f.id);
     const val = el ? parseCurrency(el.value) : 0;
     ebitda += f.sign * val;
   });
-  return ebitda;
+  return ebitda; // Can be negative — let the result show that
 }
 
 function recalcGuided() {
-  const cfg = getGuidedConfig() || GUIDED_CONFIGS._default;
+  // Universal mode — show EBITDA when any field has a value
+  const earnings = parseCurrency((document.getElementById('g-earnings') || {value:''}).value);
+  const interest = parseCurrency((document.getElementById('g-interest') || {value:''}).value);
+  const taxes    = parseCurrency((document.getElementById('g-taxes') || {value:''}).value);
+  const da       = parseCurrency((document.getElementById('g-da') || {value:''}).value);
   const ebitda   = calcGuidedEbitda();
   const resultEl = document.getElementById('guided-result');
   const valEl    = document.getElementById('guided-ebitda-display');
   const subEl    = document.getElementById('guided-margin-display');
+  const hasAny   = earnings || interest || taxes || da;
 
-  // Check if any guided field has a value
-  let hasAny = false;
-  cfg.fields.forEach(f => {
-    const el = document.getElementById(f.id);
-    if (el && parseCurrency(el.value)) hasAny = true;
-  });
-
-  // Revenue field for margin calculation (first field with sign +1 and id containing 'revenue')
-  const revField = cfg.fields.find(f => f.id === 'g-revenue-calc');
-  const rev = revField ? parseCurrency((document.getElementById(revField.id) || {value:''}).value) : 0;
+  // Use the Mode B dedicated revenue field for margin — not the Mode A field
+  const rev = parseCurrency((document.getElementById('g-revenue-calc') || {value:''}).value);
 
   if (hasAny) {
     resultEl.style.display = 'flex';
@@ -4014,18 +3868,18 @@ function validateFinancialsAndContinue() {
       }
     });
   } else {
-    // Mode B: check that at least Revenue is entered
-    const revenueEl = document.getElementById('g-revenue-calc');
-    if (revenueEl) {
-      const revenueVal = parseCurrency(revenueEl.value);
-      const group = revenueEl.closest('.field-group');
-      if (!revenueVal && revenueVal !== 0) {
+    // Mode B: check that at least Earnings is entered
+    const earningsEl = document.getElementById('g-earnings');
+    if (earningsEl) {
+      const earningsVal = parseCurrency(earningsEl.value);
+      const group = earningsEl.closest('.field-group');
+      if (!earningsVal && earningsVal !== 0) {
         group.classList.add('field-error');
         let err = group.querySelector('.error-msg');
         if (!err) {
           err = document.createElement('span');
           err.className = 'error-msg';
-          err.textContent = 'Annual Revenue is required to continue.';
+          err.textContent = 'Annual Earnings (Net Income) is required to continue.';
           group.appendChild(err);
         }
         err.style.display = 'block';
@@ -4384,125 +4238,107 @@ function closeAwarenessPopupAndContinue() {
 }
 
 // ================================================================
-// BACKEND INTEGRATION (NO DIRECT CLIENT->SUPABASE)
+// SUPABASE INTEGRATION
 // ================================================================
-const API_BASE = window.location.origin;
-const SESSION_KEY = 'edgefour_session_id';
+const SUPABASE_URL  = 'https://zlacmdiizmcvactnwpoq.supabase.co';
+const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsYWNtZGlpem1jdmFjdG53cG9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMTM4NjMsImV4cCI6MjA4OTU4OTg2M30.AP-X7KgqJ7x5sijaKx0EzCJTl4Jrz1jqqMr2pF5xMUU';
+
+// Track the current submission ID so we can update it with quiz answers
 let _currentValuationId = null;
-let _pendingLeadEmail = '';
-
-function getOrCreateSessionId() {
-  let id = sessionStorage.getItem(SESSION_KEY);
-  if (!id) {
-    id = (typeof crypto !== 'undefined' && crypto.randomUUID)
-      ? crypto.randomUUID()
-      : String(Date.now());
-    sessionStorage.setItem(SESSION_KEY, id);
-  }
-  return id;
-}
-
-function getResultNumber(id) {
-  const t = (document.getElementById(id)?.textContent || '').trim();
-  const n = Number(t.replace(/[^0-9.-]/g, ''));
-  return Number.isFinite(n) ? n : 0;
-}
 
 async function saveValuation(data) {
   try {
-    if (!_currentValuationId) {
-      _currentValuationId = (typeof crypto !== 'undefined' && crypto.randomUUID)
-        ? crypto.randomUUID()
-        : String(Date.now());
-    }
-
-    const payload = {
-      session_id: getOrCreateSessionId(),
-      valuation_id: _currentValuationId,
-      input_mode: data.input_mode || 'know',
-      revenue: Number(data.revenue || 0),
-      ebitda: Number(data.ebitda || 0),
-      earnings: data.earnings ?? null,
-      interest_expense: data.interest_expense ?? null,
-      taxes_paid: data.taxes_paid ?? null,
-      depreciation_amort: data.depreciation_amort ?? null,
-      owner_salary: Number(data.owner_salary || 0),
-      market_salary: Number(data.market_salary || 0),
-      addbacks: Number(data.addbacks || 0),
-      adj_ebitda: Number(data.adj_ebitda || 0),
-      base_multiple: Number(data.base_multiple || 0),
-      estimated_multiple: Number(data.estimated_multiple || 0),
-      years_bonus: Number(data.years_bonus || 0),
-      revenue_scale_bonus: Number(data.revenue_scale_bonus || 0),
-      valuation_low: Number(data.valuation_low || 0),
-      valuation_base: Number(data.valuation_base || 0),
-      valuation_high: Number(data.valuation_high || 0),
-      value_score: Number(data.value_score || 0),
-      sliders: {
-        growth: Number(data.growth_slider || 3),
-        owner_dep: Number(data.owner_dep_slider || 3),
-        recurring: Number(data.recurring_slider || 3),
-        cust_conc: Number(data.cust_conc_slider || 3),
-        systems: Number(data.systems_slider || 3),
-        mgmt: Number(data.mgmt_slider || 3),
-        fin_records: Number(data.fin_records_slider || 3),
-      },
-    };
-
-    const res = await fetch(`${API_BASE}/api/save-valuation`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/valuations`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      headers: {
+        'Content-Type':  'application/json',
+        'apikey':        SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Prefer':        'return=representation',
+      },
+      body: JSON.stringify(data),
     });
 
-    if (res.ok) {
-      const out = await res.json().catch(() => null);
-      if (out?.valuation_id) _currentValuationId = out.valuation_id;
-    } else {
-      console.warn('EdgeFour: backend save-valuation failed');
+    if (!res.ok) {
+      const err = await res.text();
+      console.warn('EdgeFour: Supabase save failed:', err);
+      return;
+    }
+
+    const rows = await res.json();
+    if (rows && rows[0] && rows[0].id) {
+      _currentValuationId = rows[0].id;
+      console.log('EdgeFour: Valuation saved, id =', _currentValuationId);
     }
   } catch (e) {
-    console.warn('EdgeFour: save-valuation error:', e.message);
+    // Silent fail — never block the user experience
+    console.warn('EdgeFour: Supabase error:', e.message);
   }
 }
 
-function updateValuationEmail(email) {
-  _pendingLeadEmail = email || '';
+async function updateValuationEmail(email) {
+  // Called immediately when user submits email on Q0 — patches the current row right away
+  // so even if they don't finish the quiz, we have their email
+  if (!_currentValuationId) return;
+  try {
+    await fetch(
+      `${SUPABASE_URL}/rest/v1/valuations?id=eq.${_currentValuationId}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type':  'application/json',
+          'apikey':        SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+        },
+        body: JSON.stringify({ lead_email: email }),
+      }
+    );
+    console.log('EdgeFour: Email saved for row', _currentValuationId);
+  } catch (e) {
+    console.warn('EdgeFour: Email save error:', e.message);
+  }
 }
 
 async function updateValuationQuiz(quizData) {
-  try {
-    if (!_currentValuationId) {
-      _currentValuationId = (typeof crypto !== 'undefined' && crypto.randomUUID)
-        ? crypto.randomUUID()
-        : String(Date.now());
+  if (!_currentValuationId) {
+    // No existing row — create a standalone quiz record
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/valuations`, {
+        method: 'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'apikey':        SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+        },
+        body: JSON.stringify(quizData),
+      });
+    } catch (e) {
+      console.warn('EdgeFour: Quiz save error:', e.message);
     }
+    return;
+  }
 
-    const payload = {
-      session_id: getOrCreateSessionId(),
-      valuation_id: _currentValuationId,
-      lead_email: quizData?.lead_email || _pendingLeadEmail || '',
-      quiz_timeline: quizData?.quiz_timeline || '',
-      quiz_advisory_source: quizData?.quiz_advisory_source || '',
-      email_content: {
-        business_name: document.getElementById('results-biz-name')?.textContent?.trim() || 'Your Business',
-        valuation_low: getResultNumber('val-low'),
-        valuation_base: getResultNumber('val-base'),
-        valuation_high: getResultNumber('val-high'),
-        value_score: getResultNumber('score-num'),
-        trajectory_top_factors: [],
-        vip_recommendations: [],
-      },
-    };
-
-    const res = await fetch(`${API_BASE}/api/submit-quiz`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) console.warn('EdgeFour: backend submit-quiz failed');
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/valuations?id=eq.${_currentValuationId}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type':  'application/json',
+          'apikey':        SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+        },
+        body: JSON.stringify(quizData),
+      }
+    );
+    if (res.ok) {
+      console.log('EdgeFour: Quiz answers saved to row', _currentValuationId);
+    } else {
+      const err = await res.text();
+      console.warn('EdgeFour: Quiz update failed:', err);
+    }
   } catch (e) {
-    console.warn('EdgeFour: submit-quiz error:', e.message);
+    console.warn('EdgeFour: Quiz update error:', e.message);
   }
 }
 // ================================================================
@@ -4570,12 +4406,4 @@ async function updateValuationQuiz(quizData) {
       <button class="modal-btn modal-btn-primary" onclick="restartApp()">
         Yes, start a new valuation
       </button>
-      <button class="modal-btn modal-btn-unlock" id="modal-btn-unlock" onclick="closeRestartModalAndUnlock()">
-        No, keep my data
-      </button>
-    </div>
-  </div>
-</div>
-
-</body>
-</html>
+      <button class="modal-btn modal-btn-unlock" id="modal-btn-unlock" onclick="closeRestartModalAndUnlo
