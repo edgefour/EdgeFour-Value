@@ -13,6 +13,11 @@ import { POST as trackEvent } from './api/track-event.ts'
 import { POST as resendWebhook } from './api/resend-webhook.ts'
 import { POST as calendlyWebhook } from './api/calendly-webhook.ts'
 
+const port = Number(process.env.PORT) || 8888
+if (!process.env.ALLOWED_ORIGIN) {
+  process.env.ALLOWED_ORIGIN = `http://localhost:${port}`
+}
+
 const routes: Record<string, (req: Request) => Promise<Response>> = {
   '/api/save-session': saveSession,
   '/api/save-step1': saveStep1,
@@ -25,7 +30,7 @@ const routes: Record<string, (req: Request) => Promise<Response>> = {
 }
 
 const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': process.env.ALLOWED_ORIGIN ?? 'http://localhost:8888',
+  'Access-Control-Allow-Origin': process.env.ALLOWED_ORIGIN!,
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 }
@@ -47,7 +52,7 @@ function getMime(path: string): string {
 }
 
 Bun.serve({
-  port: 8888,
+  port,
   async fetch(req) {
     const url = new URL(req.url)
 
@@ -86,4 +91,4 @@ Bun.serve({
   },
 })
 
-console.log('Dev server at http://localhost:8888')
+console.log(`Dev server at http://localhost:${port}`)
