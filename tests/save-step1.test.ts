@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import { POST } from '../api/save-step1.ts'
-import { postRequest, json, createTestSession } from './helpers.ts'
+import { POST } from '../api/save-step1'
+import { postRequest, json, createTestSession } from './helpers'
 
 describe('save-step1', () => {
   test('returns valuation_id for valid input', async () => {

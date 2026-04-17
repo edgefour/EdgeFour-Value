@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import { POST } from '../api/submit-quiz.ts'
-import { postRequest, json } from './helpers.ts'
+import { POST } from '../api/submit-quiz'
+import { postRequest, json } from './helpers'
 
 const validBody = {
   session_id: crypto.randomUUID(),

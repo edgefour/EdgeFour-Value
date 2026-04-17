@@ -1,8 +1,8 @@
-import { handleCors, jsonResponse } from './_lib/cors.ts'
-import { validateCalculateInput } from './_lib/validate.ts'
-import { calculate } from './_lib/calculator.ts'
-import { logError } from './_lib/db.ts'
-import type { CalculateInput } from '../shared/types.ts'
+import { handleCors, jsonResponse } from './_lib/cors'
+import { validateCalculateInput } from './_lib/validate'
+import { calculate } from './_lib/calculator'
+import { logError } from './_lib/db'
+import type { CalculateInput } from '../shared/types'
 
 export async function POST(req: Request): Promise<Response> {
   const cors = handleCors(req)

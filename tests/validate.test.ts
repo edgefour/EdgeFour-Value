@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import { validateEmail, validateCalculateInput } from '../api/_lib/validate.ts'
-import type { CalculateInput } from '../shared/types.ts'
+import { validateEmail, validateCalculateInput } from '../api/_lib/validate'
+import type { CalculateInput } from '../shared/types'
 
 const validSliders = {
   growth: 3,

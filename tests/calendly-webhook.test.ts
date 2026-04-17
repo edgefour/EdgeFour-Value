@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import { POST } from '../api/calendly-webhook.ts'
-import { postRequest, json } from './helpers.ts'
+import { POST } from '../api/calendly-webhook'
+import { postRequest, json } from './helpers'
 
 describe('calendly-webhook', () => {
   test('handles invitee.created event', async () => {

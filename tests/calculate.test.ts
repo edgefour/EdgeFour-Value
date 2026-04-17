@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test'
-import { POST } from '../api/calculate.ts'
-import { postRequest, json } from './helpers.ts'
-import { calculate } from '../api/_lib/calculator.ts'
-import type { CalculateResult } from '../shared/types.ts'
+import { POST } from '../api/calculate'
+import { postRequest, json } from './helpers'
+import { calculate } from '../api/_lib/calculator'
+import type { CalculateResult } from '../shared/types'
 
 const validBody = {
   industry: 'mgmt_consulting',

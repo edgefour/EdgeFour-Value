@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import { handleCors, jsonResponse, noContentResponse } from '../api/_lib/cors.ts'
-import { optionsRequest } from './helpers.ts'
+import { handleCors, jsonResponse, noContentResponse } from '../api/_lib/cors'
+import { optionsRequest } from './helpers'
 
 describe('handleCors', () => {
   test('returns 204 for OPTIONS request', () => {

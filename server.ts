@@ -4,14 +4,14 @@
  * Serves static files from public/ and js/.
  */
 
-import { POST as saveSession } from './api/save-session.ts'
-import { POST as saveStep1 } from './api/save-step1.ts'
-import { POST as calculate } from './api/calculate.ts'
-import { POST as saveValuation } from './api/save-valuation.ts'
-import { POST as submitQuiz } from './api/submit-quiz.ts'
-import { POST as trackEvent } from './api/track-event.ts'
-import { POST as resendWebhook } from './api/resend-webhook.ts'
-import { POST as calendlyWebhook } from './api/calendly-webhook.ts'
+import { POST as saveSession } from './api/save-session'
+import { POST as saveStep1 } from './api/save-step1'
+import { POST as calculate } from './api/calculate'
+import { POST as saveValuation } from './api/save-valuation'
+import { POST as submitQuiz } from './api/submit-quiz'
+import { POST as trackEvent } from './api/track-event'
+import { POST as resendWebhook } from './api/resend-webhook'
+import { POST as calendlyWebhook } from './api/calendly-webhook'
 
 const port = Number(process.env.PORT) || 8888
 if (!process.env.ALLOWED_ORIGIN) {

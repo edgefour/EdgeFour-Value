@@ -1,4 +1,4 @@
-import type { CalculateInput, SliderValues } from '../../shared/types.ts'
+import type { CalculateInput, SliderValues } from '../../shared/types'
 
 type ValidationResult = { valid: true } | { valid: false; error: string }
 
