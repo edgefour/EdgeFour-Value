@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'bun:test'
-import { post, json } from './helpers.ts'
+import { describe, expect, test } from 'vitest'
+import { post, json } from './helpers.js'
 
 describe('save-session', () => {
   test('returns ok for valid session', async () => {

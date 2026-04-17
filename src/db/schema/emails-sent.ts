@@ -1,6 +1,6 @@
 import { pgTable, uuid, text, timestamp } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import { valuations } from "./valuations";
+import { valuations } from "./valuations.js";
 
 export const emailsSent = pgTable("emails_sent", {
   id: uuid("id")

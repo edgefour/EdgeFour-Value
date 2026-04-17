@@ -2,7 +2,7 @@
  * Database client using Drizzle ORM connected to Supabase/PostgreSQL.
  */
 
-import { db } from '../../src/db/index'
+import { db } from '../../src/db/index.js'
 import {
   sessions,
   valuations,
@@ -10,7 +10,7 @@ import {
   emailsSent,
   bookings,
   functionErrors,
-} from '../../src/db/schema/index'
+} from '../../src/db/schema/index.js'
 import { eq } from 'drizzle-orm'
 
 export async function insertSession(data: Record<string, unknown>) {

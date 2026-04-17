@@ -8,7 +8,7 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import { sessions } from "./sessions";
+import { sessions } from "./sessions.js";
 
 export const valuations = pgTable(
   "valuations",
