@@ -1,8 +1,8 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { handle } from 'hono/vercel'
-import { validateCalculateInput, validateEmail } from './_lib/validate.ts'
-import { calculate } from './_lib/calculator.ts'
+import { validateCalculateInput, validateEmail } from './_lib/validate.js'
+import { calculate } from './_lib/calculator.js'
 import {
   insertSession,
   insertValuation,
@@ -13,8 +13,8 @@ import {
   insertBooking,
   lookupValuationByEmail,
   logError,
-} from './_lib/db.ts'
-import { sendReport } from './_lib/send-email.ts'
+} from './_lib/db.js'
+import { sendReport } from './_lib/send-email.js'
 import type {
   CalculateInput,
   SaveSessionRequest,
@@ -22,7 +22,7 @@ import type {
   SaveValuationRequest,
   SubmitQuizRequest,
   TrackEventRequest,
-} from '../shared/types.ts'
+} from '../shared/types.js'
 
 const app = new Hono().basePath('/api')
 
