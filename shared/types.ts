@@ -143,10 +143,16 @@ export type SubmitQuizRequest = {
   quiz_advisory_source: string
   email_content: {
     business_name: string
+    industry: string
     valuation_low: number
     valuation_base: number
     valuation_high: number
     value_score: number
+    score_band: string
+    adj_ebitda: number
+    estimated_multiple: number
+    good_factors: Array<{ name: string; description: string }>
+    bad_factors: Array<{ name: string; description: string }>
     trajectory_top_factors: Array<{ name: string; delta: number }>
     vip_recommendations: Array<{ title: string; body: string }>
   }

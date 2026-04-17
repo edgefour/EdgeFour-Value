@@ -1,8 +1,4 @@
-/**
- * Stubbed Resend email client.
- * Logs the email payload and returns a fake resend_id.
- * Replace with real Resend SDK calls when ready.
- */
+import { Resend } from 'resend'
 
 export type SendEmailParams = {
   to: string
@@ -11,13 +7,20 @@ export type SendEmailParams = {
   reply_to?: string
 }
 
+const resend = new Resend(process.env.RESEND_API_KEY)
+
 export async function sendEmail(params: SendEmailParams) {
-  const resend_id = `resend_mock_${crypto.randomUUID().slice(0, 8)}`
-  console.log('[resend:sendEmail]', {
-    resend_id,
+  const { data, error } = await resend.emails.send({
+    from: 'Edge Four <reports@edgefourllc.com>',
     to: params.to,
     subject: params.subject,
-    html_length: params.html.length,
+    html: params.html,
+    replyTo: params.reply_to,
   })
-  return { resend_id }
+
+  if (error) {
+    throw new Error(`Resend error: ${error.message}`)
+  }
+
+  return { resend_id: data!.id }
 }
