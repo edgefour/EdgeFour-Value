@@ -1,5 +1,5 @@
-import { handleCors, jsonResponse } from './_lib/cors.ts'
-import { updateEmailRecord, logError } from './_lib/db.ts'
+import { handleCors, jsonResponse } from './_lib/cors'
+import { updateEmailRecord, logError } from './_lib/db'
 
 export async function POST(req: Request): Promise<Response> {
   const cors = handleCors(req)

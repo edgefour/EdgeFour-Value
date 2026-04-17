@@ -3,7 +3,7 @@
  * Source of truth: docs/ORIGINAL-edgefour-value_26_v4.16.26 (1).html
  */
 
-import type { CalculateInput, CalculateResult } from '../../shared/types.ts'
+import type { CalculateInput, CalculateResult } from '../../shared/types'
 
 // ── INDUSTRY MULTIPLES (114 entries) ────────────────────────────────────────
 export const industryMultiples: Record<string, number> = {

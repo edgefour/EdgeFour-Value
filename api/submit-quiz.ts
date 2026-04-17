@@ -1,8 +1,8 @@
-import { handleCors, jsonResponse } from './_lib/cors.ts'
-import { updateValuation, updateSession, logError } from './_lib/db.ts'
-import { validateEmail } from './_lib/validate.ts'
-import { sendReport } from './send-email.ts'
-import type { SubmitQuizRequest } from '../shared/types.ts'
+import { handleCors, jsonResponse } from './_lib/cors'
+import { updateValuation, updateSession, logError } from './_lib/db'
+import { validateEmail } from './_lib/validate'
+import { sendReport } from './send-email'
+import type { SubmitQuizRequest } from '../shared/types'
 
 export async function POST(req: Request): Promise<Response> {
   const cors = handleCors(req)

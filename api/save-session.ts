@@ -1,6 +1,6 @@
-import { handleCors, jsonResponse } from './_lib/cors.ts'
-import { insertSession, logError } from './_lib/db.ts'
-import type { SaveSessionRequest } from '../shared/types.ts'
+import { handleCors, jsonResponse } from './_lib/cors'
+import { insertSession, logError } from './_lib/db'
+import type { SaveSessionRequest } from '../shared/types'
 
 export async function POST(req: Request): Promise<Response> {
   const cors = handleCors(req)
