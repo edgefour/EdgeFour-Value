@@ -3,8 +3,8 @@
  * Imported by the Hono app (api/index.ts).
  */
 
-import { sendEmail as resendSend } from './resend.ts'
-import { insertEmailRecord } from './db.ts'
+import { sendEmail as resendSend } from './resend.js'
+import { insertEmailRecord } from './db.js'
 
 export type SendReportParams = {
   session_id: string
