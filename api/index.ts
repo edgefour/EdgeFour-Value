@@ -297,8 +297,11 @@ app.post('/resend-webhook', async (c) => {
 
     const resend_id = body.data?.email_id
     if (!resend_id) {
+      console.warn('[resend-webhook] Missing email_id in payload', { type: body.type, data: body.data })
       return c.json({ error: 'Missing email_id in payload' }, 400)
     }
+
+    console.log(`[resend-webhook] event=${body.type} email_id=${resend_id}`)
 
     const now = new Date().toISOString()
 
@@ -312,6 +315,8 @@ app.post('/resend-webhook', async (c) => {
       case 'email.bounced':
         await updateEmailRecord(resend_id, { bounced_at: now })
         break
+      default:
+        console.log(`[resend-webhook] unhandled event type: ${body.type}`)
     }
 
     return c.json({ ok: true })

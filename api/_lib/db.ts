@@ -174,7 +174,8 @@ export async function updateEmailRecord(
   if ('bounced_at' in data) setValues.bouncedAt = new Date(data.bounced_at as string)
   if ('status' in data) setValues.status = data.status
 
-  await db.update(emailsSent).set(setValues).where(eq(emailsSent.resendId, resend_id))
+  const result = await db.update(emailsSent).set(setValues).where(eq(emailsSent.resendId, resend_id))
+  console.log(`[updateEmailRecord] resend_id=${resend_id} fields=${Object.keys(setValues).join(',')} rowCount=${result.rowCount}`)
 }
 
 export async function insertBooking(data: Record<string, unknown>) {
