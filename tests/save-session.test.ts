@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import { POST } from '../api/save-session.ts'
-import { postRequest, json, optionsRequest } from './helpers.ts'
+import { POST } from '../api/save-session'
+import { postRequest, json, optionsRequest } from './helpers'
 
 describe('save-session', () => {
   test('returns ok for valid session', async () => {

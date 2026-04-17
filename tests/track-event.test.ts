@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import { POST } from '../api/track-event.ts'
-import { postRequest } from './helpers.ts'
+import { POST } from '../api/track-event'
+import { postRequest } from './helpers'
 
 describe('track-event', () => {
   test('returns 204 for valid event', async () => {

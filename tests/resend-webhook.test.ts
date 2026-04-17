@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import { POST } from '../api/resend-webhook.ts'
-import { postRequest, json } from './helpers.ts'
+import { POST } from '../api/resend-webhook'
+import { postRequest, json } from './helpers'
 
 describe('resend-webhook', () => {
   test('handles email.delivered event', async () => {
