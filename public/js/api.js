@@ -49,6 +49,10 @@ export async function submitQuiz(data) {
   return post("/api/submit-quiz", data);
 }
 
+export async function sendReport(data) {
+  return post("/api/send-report", data);
+}
+
 export function trackEvent(data) {
   post("/api/track-event", data);
 }

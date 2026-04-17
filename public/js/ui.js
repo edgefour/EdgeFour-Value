@@ -9,6 +9,7 @@ import {
   calculate as apiCalculate,
   saveValuation as apiSaveValuation,
   submitQuiz as apiSubmitQuiz,
+  sendReport as apiSendReport,
   trackEvent as apiTrackEvent,
 } from './api.js';
 
@@ -1543,12 +1544,18 @@ async function updateValuationQuiz(quizData) {
       quiz_advisory_source: quizData?.quiz_advisory_source || '',
       email_content: {
         business_name: document.getElementById('results-biz-name')?.textContent?.trim() || 'Your Business',
+        industry: document.getElementById('industry')?.value || 'other',
         valuation_low: getResultNumber('val-low'),
         valuation_base: getResultNumber('val-base'),
         valuation_high: getResultNumber('val-high'),
         value_score: getResultNumber('score-num'),
-        trajectory_top_factors: [],
-        vip_recommendations: [],
+        score_band: window._lastCalcResult?.score_band || '',
+        adj_ebitda: window._lastCalcResult?.adj_ebitda || 0,
+        estimated_multiple: window._lastCalcResult?.estimated_multiple || 0,
+        good_factors: (window._lastCalcResult?.good_factors || []).map(f => ({ name: f.name, description: f.description })),
+        bad_factors: (window._lastCalcResult?.bad_factors || []).map(f => ({ name: f.name, description: f.description })),
+        trajectory_top_factors: (window._lastCalcResult?.trajectory?.top_factors || []).map(f => ({ name: f.name, delta: f.delta })),
+        vip_recommendations: window._lastCalcResult?.vip_recommendations || [],
       },
     };
 
@@ -1559,6 +1566,52 @@ async function updateValuationQuiz(quizData) {
 }
 // ================================================================
 
+async function requestReport() {
+  const btn = document.getElementById('send-report-btn');
+  if (!btn) return;
+
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span style="opacity:0.7;">Sending...</span>';
+
+  try {
+    const r = window._lastCalcResult;
+    if (!r) throw new Error('No calculation result available');
+
+    const result = await apiSendReport({
+      session_id: getOrCreateSessionId(),
+      valuation_id: _currentValuationId,
+      recipient_email: _pendingLeadEmail,
+      email_content: {
+        business_name: document.getElementById('results-biz-name')?.textContent?.trim() || 'Your Business',
+        industry: document.getElementById('industry')?.value || 'other',
+        valuation_low: r.valuation_low,
+        valuation_base: r.valuation_base,
+        valuation_high: r.valuation_high,
+        value_score: r.value_score,
+        score_band: r.score_band || '',
+        adj_ebitda: r.adj_ebitda,
+        estimated_multiple: r.estimated_multiple,
+        good_factors: (r.good_factors || []).map(f => ({ name: f.name, description: f.description })),
+        bad_factors: (r.bad_factors || []).map(f => ({ name: f.name, description: f.description })),
+        trajectory_top_factors: (r.trajectory?.top_factors || []).map(f => ({ name: f.name, delta: f.delta })),
+        vip_recommendations: r.vip_recommendations || [],
+      },
+    });
+
+    if (result?.ok) {
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline;vertical-align:middle;margin-right:6px;"><path d="M3 8.5 L6.5 12 L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Report Sent!';
+    } else {
+      throw new Error('Send failed');
+    }
+  } catch (e) {
+    console.warn('EdgeFour: send-report error:', e.message);
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+    btn.insertAdjacentHTML('afterend', '<p style="color:#c0392b;font-size:13px;margin-top:8px;text-align:center;" id="report-error">Something went wrong — please try again.</p>');
+    setTimeout(() => document.getElementById('report-error')?.remove(), 5000);
+  }
+}
 
 // ── Expose to global scope for inline HTML handlers ────────────────────
 // Slider label arrays (referenced by oninput="updateSliderLabel(...,growthLabels)")
@@ -1588,6 +1641,7 @@ window.restartApp = restartApp;
 window.quizNext = quizNext;
 window.quizBack = quizBack;
 window.buildSnapshot = buildSnapshot;
+window.requestReport = requestReport;
 window.filterStates = filterStates;
 window.selectState = selectState;
 window.hideStateDropdown = hideStateDropdown;
