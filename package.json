@@ -6,8 +6,7 @@
   "scripts": {
     "dev": "bun run server.ts",
     "test": "bun test",
-    "build": "node scripts/build-api.mjs",
-    "typecheck": "tsc --noEmit",
+"typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
@@ -15,14 +14,14 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "drizzle-kit": "^0.31.10",
-    "esbuild": "^0.28.0"
+    "drizzle-kit": "^0.31.10"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",
+    "hono": "^4.12.14",
     "postgres": "^3.4.9"
   }
 }

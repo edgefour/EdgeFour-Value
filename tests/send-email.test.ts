@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { sendReport } from '../api/send-email.ts'
+import { sendReport } from '../api/_lib/send-email.ts'
 import { createTestValuation } from './helpers.ts'
 
 describe('sendReport', () => {

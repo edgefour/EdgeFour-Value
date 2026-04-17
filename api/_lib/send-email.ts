@@ -3,8 +3,8 @@
  * Imported by submit-quiz.ts.
  */
 
-import { sendEmail as resendSend } from './_lib/resend.ts'
-import { insertEmailRecord } from './_lib/db.ts'
+import { sendEmail as resendSend } from './resend.ts'
+import { insertEmailRecord } from './db.ts'
 
 export type SendReportParams = {
   session_id: string

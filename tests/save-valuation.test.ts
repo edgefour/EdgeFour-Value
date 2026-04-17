@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { POST } from '../api/save-valuation.ts'
-import { postRequest, json } from './helpers.ts'
+import { post, json } from './helpers.ts'
 
 const validBody = {
   session_id: crypto.randomUUID(),
@@ -32,7 +31,7 @@ const validBody = {
 
 describe('save-valuation', () => {
   test('returns valuation_id for valid input', async () => {
-    const res = await POST(postRequest(validBody))
+    const res = await post('/api/save-valuation', validBody)
     expect(res.status).toBe(200)
     const body = (await json(res)) as { valuation_id: string }
     expect(body.valuation_id).toBe(validBody.valuation_id)
@@ -40,13 +39,13 @@ describe('save-valuation', () => {
 
   test('returns 400 when session_id is missing', async () => {
     const { session_id, ...rest } = validBody
-    const res = await POST(postRequest(rest))
+    const res = await post('/api/save-valuation', rest)
     expect(res.status).toBe(400)
   })
 
   test('returns 400 when valuation_id is missing', async () => {
     const { valuation_id, ...rest } = validBody
-    const res = await POST(postRequest(rest))
+    const res = await post('/api/save-valuation', rest)
     expect(res.status).toBe(400)
   })
 })

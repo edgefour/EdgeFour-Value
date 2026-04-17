@@ -1,38 +1,14 @@
 /**
  * Bun local dev server — NOT deployed.
- * Routes /api/* requests to the corresponding function handlers.
+ * Uses the same Hono app as production.
  * Serves static files from public/ and js/.
  */
 
-import { POST as saveSession } from './api/save-session.ts'
-import { POST as saveStep1 } from './api/save-step1.ts'
-import { POST as calculate } from './api/calculate.ts'
-import { POST as saveValuation } from './api/save-valuation.ts'
-import { POST as submitQuiz } from './api/submit-quiz.ts'
-import { POST as trackEvent } from './api/track-event.ts'
-import { POST as resendWebhook } from './api/resend-webhook.ts'
-import { POST as calendlyWebhook } from './api/calendly-webhook.ts'
+import { app } from './api/index.ts'
 
 const port = Number(process.env.PORT) || 8888
 if (!process.env.ALLOWED_ORIGIN) {
   process.env.ALLOWED_ORIGIN = `http://localhost:${port}`
-}
-
-const routes: Record<string, (req: Request) => Promise<Response>> = {
-  '/api/save-session': saveSession,
-  '/api/save-step1': saveStep1,
-  '/api/calculate': calculate,
-  '/api/save-valuation': saveValuation,
-  '/api/submit-quiz': submitQuiz,
-  '/api/track-event': trackEvent,
-  '/api/resend-webhook': resendWebhook,
-  '/api/calendly-webhook': calendlyWebhook,
-}
-
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': process.env.ALLOWED_ORIGIN!,
-  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
 }
 
 const MIME_TYPES: Record<string, string> = {
@@ -56,18 +32,9 @@ Bun.serve({
   async fetch(req) {
     const url = new URL(req.url)
 
-    // CORS preflight
-    if (req.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: CORS_HEADERS })
-    }
-
-    // API routes
-    const handler = routes[url.pathname]
-    if (handler) {
-      if (req.method !== 'POST') {
-        return new Response('Method not allowed', { status: 405 })
-      }
-      return handler(req)
+    // API routes — delegate to Hono
+    if (url.pathname.startsWith('/api/')) {
+      return app.fetch(req)
     }
 
     // Static files: try public/ then js/
