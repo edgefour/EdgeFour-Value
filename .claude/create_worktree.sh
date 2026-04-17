@@ -1,37 +1,42 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Creates a git worktree in projectRoot/worktrees/<name>, copies .claude and
-# .env files from the main repo, and installs dependencies.
-#
-# Usage: bash .claude/create_worktree.sh <branch-name> [worktree-name]
+# WorktreeCreate hook for Claude Code.
+# Reads JSON from stdin: { "name": "<worktree-name>", "cwd": "<repo-root>", ... }
+# Creates the worktree at <repo-root>/worktrees/<name>, copies .claude and .env*
+# files, symlinks node_modules, then prints the worktree path to stdout.
 
-BRANCH="${1:?Usage: $0 <branch-name> [worktree-name]}"
-NAME="${2:-${BRANCH//\//-}}"
+INPUT=$(cat)
+NAME=$(echo "$INPUT" | jq -r '.name')
+CWD=$(echo "$INPUT" | jq -r '.cwd')
 
-MAIN_REPO="$(git rev-parse --path-format=absolute --git-common-dir)"
-MAIN_REPO="${MAIN_REPO%/.git}"
+WORKTREE_DIR="$CWD/worktrees/$NAME"
 
-WORKTREE_DIR="$MAIN_REPO/worktrees/$NAME"
-
-echo "Creating worktree '$NAME' at: $WORKTREE_DIR"
-git -C "$MAIN_REPO" worktree add "$WORKTREE_DIR" -b "$BRANCH"
+echo "Creating worktree '$NAME' at: $WORKTREE_DIR" >&2
+git -C "$CWD" worktree add "$WORKTREE_DIR" -b "$NAME" >&2
 
 # Copy .claude from main repo
-if [ -d "$MAIN_REPO/.claude" ]; then
-  cp -r "$MAIN_REPO/.claude" "$WORKTREE_DIR/.claude"
-  echo "Copied .claude"
+if [ -d "$CWD/.claude" ]; then
+  cp -r "$CWD/.claude" "$WORKTREE_DIR/.claude"
+  echo "Copied .claude" >&2
 fi
 
-# Copy all .env* files (except .env.sample which is tracked in git)
-for env_file in "$MAIN_REPO"/.env*; do
+# Copy all .env* files (skip .env.sample which is tracked in git)
+for env_file in "$CWD"/.env*; do
   [ -f "$env_file" ] || continue
   basename="$(basename "$env_file")"
   [ "$basename" = ".env.sample" ] && continue
   cp "$env_file" "$WORKTREE_DIR/$basename"
-  echo "Copied $basename"
+  echo "Copied $basename" >&2
 done
 
-ln -s "$MAIN_REPO/node_modules" "$WORKTREE_DIR/node_modules"
-echo "Linked node_modules"
-echo "Worktree setup complete: $WORKTREE_DIR"
+# Symlink node_modules from main repo
+if [ -d "$CWD/node_modules" ]; then
+  ln -s "$CWD/node_modules" "$WORKTREE_DIR/node_modules"
+  echo "Linked node_modules" >&2
+fi
+
+echo "Worktree setup complete: $WORKTREE_DIR" >&2
+
+# Must print only the worktree path to stdout
+echo "$WORKTREE_DIR"
