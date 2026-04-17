@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { handle } from 'hono/vercel'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { validateCalculateInput, validateEmail } from './_lib/validate.js'
 import { calculate } from './_lib/calculator.js'
 import {
@@ -316,8 +316,50 @@ app.post('/calendly-webhook', async (c) => {
   }
 })
 
-// Vercel adapter
-export default handle(app)
+// Vercel Node.js adapter — converts IncomingMessage to Web Request
+// so Hono can handle it. Vercel pre-reads the body into req.body/rawBody,
+// so we must reconstruct it rather than streaming from the consumed socket.
+export default async function handler(req: IncomingMessage, res: ServerResponse) {
+  const proto = req.headers['x-forwarded-proto'] || 'https'
+  const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost'
+  const url = `${proto}://${host}${req.url}`
+
+  const headers = new Headers()
+  for (let i = 0; i < req.rawHeaders.length; i += 2) {
+    headers.append(req.rawHeaders[i], req.rawHeaders[i + 1])
+  }
+
+  let body: BodyInit | null = null
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    // Vercel helpers put pre-read body on req; fall back to collecting chunks
+    const raw = (req as any).rawBody ?? (req as any).body
+    if (raw instanceof Buffer) {
+      body = raw
+    } else if (typeof raw === 'string') {
+      body = raw
+    } else if (raw && typeof raw === 'object') {
+      body = JSON.stringify(raw)
+    } else {
+      const chunks: Buffer[] = []
+      for await (const chunk of req) chunks.push(Buffer.from(chunk))
+      body = Buffer.concat(chunks)
+    }
+  }
+
+  const request = new Request(url, { method: req.method, headers, body })
+  const response = await app.fetch(request)
+
+  res.writeHead(response.status, Object.fromEntries(response.headers.entries()))
+  if (response.body) {
+    const reader = response.body.getReader()
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      res.write(value)
+    }
+  }
+  res.end()
+}
 
 // Also export the app for local Bun dev server
 export { app }
