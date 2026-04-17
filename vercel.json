@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": null,
+  "buildCommand": "node scripts/build-api.mjs",
   "outputDirectory": "public",
   "git": {
     "deploymentEnabled": {
@@ -8,8 +8,11 @@
     }
   },
   "functions": {
-    "api/**/*.ts": {
+    "api-build/*.mjs": {
       "maxDuration": 10
     }
-  }
+  },
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/api-build/:path*.mjs" }
+  ]
 }
