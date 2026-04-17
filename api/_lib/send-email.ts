@@ -1,10 +1,10 @@
 /**
  * Email sending module — not a route.
- * Imported by submit-quiz.ts.
+ * Imported by the Hono app (api/index.ts).
  */
 
-import { sendEmail as resendSend } from './_lib/resend'
-import { insertEmailRecord } from './_lib/db'
+import { sendEmail as resendSend } from './resend.ts'
+import { insertEmailRecord } from './db.ts'
 
 export type SendReportParams = {
   session_id: string

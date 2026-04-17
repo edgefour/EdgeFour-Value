@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import { sendReport } from '../api/send-email'
-import { createTestValuation } from './helpers'
+import { sendReport } from '../api/_lib/send-email.ts'
+import { createTestValuation } from './helpers.ts'
 
 describe('sendReport', () => {
   test('returns a resend_id on success', async () => {

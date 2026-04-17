@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { POST } from '../api/submit-quiz'
-import { postRequest, json } from './helpers'
+import { post, json } from './helpers.ts'
 
 const validBody = {
   session_id: crypto.randomUUID(),
@@ -15,23 +14,19 @@ const validBody = {
     valuation_high: 1_862_500,
     value_score: 68,
     trajectory_top_factors: [{ name: 'Owner Dependency', delta: 155_000 }],
-    vip_recommendations: [
-      { title: 'Reduce Owner Dependency', body: 'Delegate more.' },
-    ],
+    vip_recommendations: [{ title: 'Reduce Owner Dependency', body: 'Delegate more.' }],
   },
 }
 
 describe('submit-quiz', () => {
   test('returns ok for valid input', async () => {
-    const res = await POST(postRequest(validBody))
+    const res = await post('/api/submit-quiz', validBody)
     expect(res.status).toBe(200)
     expect(await json(res)).toEqual({ ok: true })
   })
 
   test('returns 400 for invalid email', async () => {
-    const res = await POST(
-      postRequest({ ...validBody, lead_email: 'not-an-email' }),
-    )
+    const res = await post('/api/submit-quiz', { ...validBody, lead_email: 'not-an-email' })
     expect(res.status).toBe(400)
     const body = (await json(res)) as { error: string }
     expect(body.error).toContain('email')
@@ -39,13 +34,13 @@ describe('submit-quiz', () => {
 
   test('returns 400 when lead_email is missing', async () => {
     const { lead_email, ...rest } = validBody
-    const res = await POST(postRequest(rest))
+    const res = await post('/api/submit-quiz', rest)
     expect(res.status).toBe(400)
   })
 
   test('returns 400 when session_id is missing', async () => {
     const { session_id, ...rest } = validBody
-    const res = await POST(postRequest(rest))
+    const res = await post('/api/submit-quiz', rest)
     expect(res.status).toBe(400)
   })
 })
