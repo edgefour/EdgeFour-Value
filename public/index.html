@@ -2200,7 +2200,7 @@
         <span class="helper">What percentage of revenue comes from your single largest customer? Lower is better for valuation.</span>
       </div>
     </div>
-    <!-- Card 3: Systems + Management Team + Financial Records -->
+    <!-- Card 3: Systems + Financial Records -->
     <div class="form-card">
       <div class="field-group slider-field">
         <label>Systems &amp; Process Maturity</label>
@@ -2209,13 +2209,7 @@
         <div class="slider-labels"><span>Everything in my head</span><span>Fully documented SOPs</span></div>
         <span class="helper">How well are your operations, workflows, and processes documented and followed by staff?</span>
       </div>
-      <div class="field-group slider-field">
-        <label>Management Team Strength</label>
-        <div class="slider-value-display" id="mgmt-display">Some leadership</div>
-        <input type="range" id="mgmt" min="1" max="5" value="3" oninput="updateSliderLabel('mgmt','mgmt-display',mgmtLabels)">
-        <div class="slider-labels"><span>Only me</span><span>Strong team in place</span></div>
-        <span class="helper">Do you have managers or leaders who could continue operating the business without you?</span>
-      </div>
+
       <div class="field-group slider-field">
         <label>Financial Record Quality</label>
         <div class="slider-value-display" id="fin-records-display">Adequate bookkeeping</div>
@@ -2517,7 +2511,6 @@ const ownerDepLabels  = ['Fully dependent','Highly dependent','Moderate','Low de
 const recurringLabels = ['< 10%','10–25%','25–50%','50–75%','75%+ recurring'];
 const custConcLabels  = ['< 5% (spread out)','5–10%','10–25%','25–50%','> 50% (high risk)'];
 const systemsLabels   = ['None documented','Basic notes','Partially documented','Most processes documented','Full SOPs + training'];
-const mgmtLabels      = ['No team','Minimal support','Some leadership','Strong team','Full leadership team'];
 const finRecordsLabels= ['Unclear / messy','Basic bookkeeping','Adequate bookkeeping','Clean QuickBooks/CPA','Reviewed or audited financials'];
 
 function updateSliderLabel(sliderId, displayId, labels) {
@@ -2531,13 +2524,39 @@ updateSliderLabel('owner-dep','owner-dep-display',ownerDepLabels);
 updateSliderLabel('recurring','recurring-display',recurringLabels);
 updateSliderLabel('cust-conc','cust-conc-display',custConcLabels);
 updateSliderLabel('systems','systems-display',systemsLabels);
-updateSliderLabel('mgmt','mgmt-display',mgmtLabels);
 updateSliderLabel('fin-records','fin-records-display',finRecordsLabels);
 
 // ---- NAVIGATION ----
 const steps = { 'section-biz-info':1, 'section-financials':2, 'section-value-drivers':3, 'section-results':4, 'section-vip-quiz':5, 'section-vip-snapshot':6 };
 
+// ---- EVENT TRACKING ----
+let _stepEnteredAt = Date.now();
+const _sectionToStep = {
+  'section-landing': 'landing', 'section-biz-info': 'business_info',
+  'section-financials': 'financials', 'section-value-drivers': 'value_drivers',
+  'section-results': 'results', 'section-vip-quiz': 'quiz', 'section-vip-snapshot': 'snapshot',
+};
+
+function trackEvent(data) {
+  fetch(`${API_BASE}/api/track-event`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session_id: getOrCreateSessionId(), ...data }),
+  }).catch(() => {});
+}
+
 function goTo(sectionId) {
+  // Track navigation: what step they came from and how long they spent
+  const prevStep = _sectionToStep[_activeSection] || 'landing';
+  const nextStep = _sectionToStep[sectionId] || sectionId;
+  const duration = Math.max(0, Math.round((Date.now() - _stepEnteredAt) / 1000));
+  const isBack = (steps[sectionId] || 0) < (steps[_activeSection] || 0);
+  trackEvent({
+    event_type: isBack ? 'step_back' : 'step_advance',
+    step: nextStep,
+    duration_seconds: duration,
+  });
+  _stepEnteredAt = Date.now();
+
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.getElementById(sectionId).classList.add('active');
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2546,6 +2565,44 @@ function goTo(sectionId) {
 
 // Track the active section so progressGoBack() knows where to go
 let _activeSection = 'section-landing';
+
+// ---- FIELD-LEVEL TRACKING ----
+// Debounce helper for slider tracking
+function _debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Track text/number field changes on blur
+  const fieldStepMap = {
+    'biz-name': 'business_info', industry: 'business_info', city: 'business_info',
+    years: 'business_info', employees: 'business_info',
+    revenue: 'financials', ebitda: 'financials', 'owner-salary': 'financials',
+    'market-salary': 'financials', addbacks: 'financials',
+    'g-earnings': 'financials', 'g-interest': 'financials', 'g-taxes': 'financials', 'g-da': 'financials',
+  };
+  for (const [id, step] of Object.entries(fieldStepMap)) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    const evtType = el.tagName === 'SELECT' ? 'change' : 'blur';
+    el.addEventListener(evtType, () => {
+      trackEvent({ event_type: 'field_change', field_name: id, new_value: el.value, step });
+    });
+  }
+  // Track state custom dropdown
+  const stateVal = document.getElementById('state-value');
+  if (stateVal) {
+    new MutationObserver(() => {
+      if (stateVal.value) trackEvent({ event_type: 'field_change', field_name: 'state', new_value: stateVal.value, step: 'business_info' });
+    }).observe(stateVal, { attributes: true, attributeFilter: ['value'] });
+  }
+  // Track slider changes (debounced)
+  ['growth','owner-dep','recurring','cust-conc','systems','fin-records'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', _debounce(() => {
+      trackEvent({ event_type: 'field_change', field_name: id, new_value: el.value, step: 'value_drivers' });
+    }, 500));
+  });
+});
 
 function updateProgress(sectionId) {
   _activeSection = sectionId;
@@ -2626,124 +2683,6 @@ function nextStep(fromSection, toSection, requiredFields) {
   });
   if (valid) goTo(toSection);
 }
-
-// ---- INDUSTRY MULTIPLES ----
-const industryMultiples = {
-  restaurant_full: 2.0,
-  restaurant_fast: 2.5,
-  catering: 2.0,
-  food_mfg: 3.5,
-  bakery: 2.0,
-  retail_general: 2.75,
-  retail_specialty: 3.5,
-  liquor_store: 3.0,
-  auto_parts: 2.5,
-  gas_station: 3.0,
-  ecommerce_branded: 4.5,
-  ecommerce_amazon: 3.0,
-  hvac: 4.5,
-  plumbing: 4.0,
-  electrical: 4.0,
-  roofing: 3.5,
-  landscape_residential: 4.0,
-  landscape_commercial: 5.0,
-  pest_residential: 4.5,
-  pest_commercial: 5.0,
-  pool_service: 4.5,
-  cleaning_residential: 3.0,
-  cleaning_commercial: 4.0,
-  security_systems: 5.0,
-  painting: 3.0,
-  junk_removal: 3.5,
-  moving: 2.5,
-  appliance_repair: 2.5,
-  auto_repair: 3.0,
-  auto_body: 3.5,
-  car_wash: 4.0,
-  auto_dealer_new: 0.5,
-  auto_dealer_used: 2.0,
-  auto_rental: 3.0,
-  medical_primary: 3.5,
-  dental_general: 4.5,
-  dental_specialty: 5.5,
-  optometry: 4.5,
-  veterinary: 5.0,
-  physical_therapy: 4.0,
-  mental_health: 4.5,
-  aba_autism: 5.5,
-  med_spa: 4.0,
-  home_health: 4.0,
-  hospice: 5.5,
-  fitness: 3.0,
-  pharmacy: 3.5,
-  cpa_accounting: 3.5,
-  law_general: 3.0,
-  law_pi: 2.5,
-  engineering: 4.5,
-  msp: 4.5,
-  marketing_agency: 3.5,
-  pr_firm: 3.5,
-  mgmt_consulting: 3.5,
-  staffing: 4.0,
-  insurance_pc: 4.5,
-  insurance_life: 4.0,
-  wealth_mgmt: 5.5,
-  mortgage: 2.5,
-  title_escrow: 2.75,
-  appraisal: 2.75,
-  saas: 8.0,
-  it_services: 5.0,
-  custom_software: 3.5,
-  tech_staffing: 4.0,
-  digital_marketing: 3.5,
-  cybersecurity: 5.0,
-  data_analytics: 4.0,
-  manufacturing: 4.0,
-  mfg_specialty: 5.25,
-  food_processing: 3.5,
-  machine_shop: 3.25,
-  distribution: 3.75,
-  distribution_specialty: 4.0,
-  industrial_services: 3.5,
-  gc_commercial: 3.5,
-  gc_residential: 3.0,
-  contractor_mep: 4.5,
-  contractor_other: 3.5,
-  real_estate_brokerage: 2.5,
-  property_mgmt: 3.25,
-  real_estate_appraisal: 2.75,
-  commercial_cleaning: 3.5,
-  trucking_asset: 3.0,
-  freight_brokerage: 3.75,
-  last_mile: 3.0,
-  moving_transport: 2.5,
-  warehousing: 4.0,
-  auto_transport: 3.0,
-  childcare: 4.5,
-  private_school: 3.5,
-  tutoring: 3.0,
-  vocational_school: 3.75,
-  elearning: 4.25,
-  assisted_living_small: 4.0,
-  assisted_living_large: 5.25,
-  home_care_private: 4.0,
-  adult_day: 3.5,
-  hair_salon: 2.25,
-  day_spa: 3.0,
-  tattoo: 2.0,
-  funeral_home: 5.0,
-  event_planning: 2.5,
-  photography: 2.25,
-  landscaping_design: 4.0,
-  tree_service: 3.5,
-  environmental: 4.0,
-  waste_mgmt: 4.0,
-  irrigation: 3.5,
-  nursery: 3.0,
-  publishing: 3.5,
-  printing: 2.75,
-  other: 3.25,
-};
 
 // ---- CALCULATE ----
 
@@ -2837,12 +2776,10 @@ function showIndustryNotice(industry) {
   }
 }
 
-function calculateAndShow() {
-  // Collect inputs
+async function calculateAndShow() {
   const bizName    = document.getElementById('biz-name').value || 'Your Business';
   const industry   = document.getElementById('industry').value || 'other';
   const years      = parseInt(document.getElementById('years').value) || 5;
-  // Read revenue + EBITDA from whichever input mode is active
   const activeMode = document.getElementById('mode-btn-know').classList.contains('active') ? 'know' : 'calc';
   const modeARevenue = parseCurrency(document.getElementById('revenue').value) || 0;
   const modeBRevenue = parseCurrency((document.getElementById('g-revenue-calc') || {value:''}).value) || 0;
@@ -2857,418 +2794,67 @@ function calculateAndShow() {
   const ownerDep    = parseInt(document.getElementById('owner-dep').value);
   const recurring   = parseInt(document.getElementById('recurring').value);
   const custConc    = parseInt(document.getElementById('cust-conc').value);
-  const systems     = parseInt(document.getElementById('systems').value);
-  const mgmt        = parseInt(document.getElementById('mgmt').value);
+  const systemsVal  = parseInt(document.getElementById('systems').value);
   const finRec      = parseInt(document.getElementById('fin-records').value);
 
-  // Compensation adjustment: positive when owner is overpaid (add back excess),
-  // negative when owner is underpaid (deduct shortfall — buyer must pay more to replace).
-  // No clamp to zero — both directions are economically meaningful.
-  const compAdj = ownerSal - marketSal;
-
-  // For display purposes, track excess vs shortfall separately
-  const excessComp = compAdj; // positive = add-back, negative = deduction
-
-  // Adjusted EBITDA: EBITDA + compensation adjustment + one-time add-backs
-  const adjEBITDA = ebitda + compAdj + addbacks;
-
-  // Base multiple
-  let baseMultiple = industryMultiples[industry] || 3.5;
-
-  // Adjustments (each factor can add/subtract from multiple)
-  let multipleAdj = 0;
-
-  // Growth: 1=declining(-1.0), 2=flat(-0.5), 3=stable(0), 4=growing(+0.5), 5=hypergrowth(+1.2)
-  const growthAdj = [-1.0, -0.5, 0, 0.5, 1.2];
-  multipleAdj += growthAdj[growth - 1];
-
-  // Owner dependency — industry-specific sensitivity
-  // High-skill/personal-service industries penalise owner dependency more heavily
-  // because buyers discount hard for key-person risk in those sectors
-  const ownerDepBySector = {
-  restaurant_full: [-0.55, -0.28, 0, 0.18, 0.3],  // Restaurant — Full Service — restaurant
-  restaurant_fast: [-0.35, -0.18, 0, 0.12, 0.2],  // Restaurant — Fast Casual / QSR — restaurant
-  catering: [-0.65, -0.33, 0, 0.18, 0.3],  // Catering & Event Food Service — restaurant
-  food_mfg: [-0.85, -0.43, 0, 0.23, 0.38],  // Specialty Food Production / Manufacturing — manufacturing
-  bakery: [-0.55, -0.28, 0, 0.15, 0.25],  // Bakery / Food Retail — retail
-  retail_general: [-0.55, -0.28, 0, 0.15, 0.25],  // Brick-and-Mortar Retail — General — retail
-  retail_specialty: [-0.65, -0.33, 0, 0.18, 0.3],  // Specialty / Niche Retail — retail
-  liquor_store: [-0.4, -0.2, 0, 0.1, 0.18],  // Beer, Wine & Liquor Store — retail
-  auto_parts: [-0.55, -0.28, 0, 0.15, 0.25],  // Auto Parts / Auto Accessories — retail
-  gas_station: [-0.35, -0.18, 0, 0.1, 0.16],  // Gas Station / Convenience Store — retail
-  ecommerce_branded: [-0.9, -0.45, 0, 0.28, 0.5],  // E-Commerce — Branded / DTC — ecommerce
-  ecommerce_amazon: [-0.65, -0.33, 0, 0.22, 0.38],  // E-Commerce — Amazon FBA / Marketplace — ecommerce
-  hvac: [-1.1, -0.55, 0, 0.28, 0.45],  // HVAC — home_services
-  plumbing: [-1.1, -0.55, 0, 0.28, 0.45],  // Plumbing — home_services
-  electrical: [-1.1, -0.55, 0, 0.28, 0.45],  // Electrical — home_services
-  roofing: [-0.9, -0.45, 0, 0.23, 0.38],  // Roofing — construction
-  landscape_residential: [-1.0, -0.5, 0, 0.25, 0.4],  // Landscape Maintenance — Residential — home_services
-  landscape_commercial: [-0.65, -0.33, 0, 0.18, 0.28],  // Landscape Maintenance — Commercial / B2B — home_services_low
-  pest_residential: [-0.65, -0.33, 0, 0.18, 0.3],  // Pest Control — Residential — home_services
-  pest_commercial: [-0.5, -0.25, 0, 0.15, 0.25],  // Pest Control — Commercial / B2B — home_services_low
-  pool_service: [-0.6, -0.3, 0, 0.16, 0.27],  // Pool Service & Maintenance — home_services_low
-  cleaning_residential: [-0.65, -0.33, 0, 0.16, 0.25],  // Cleaning — Residential / Maid Services — home_services_low
-  cleaning_commercial: [-0.55, -0.28, 0, 0.14, 0.22],  // Cleaning — Commercial / Janitorial — home_services_low
-  security_systems: [-0.65, -0.33, 0, 0.18, 0.3],  // Security Systems — Installation & Monitoring — home_services_low
-  painting: [-0.85, -0.43, 0, 0.2, 0.33],  // Painting — Residential & Commercial — home_services_low
-  junk_removal: [-0.45, -0.23, 0, 0.13, 0.2],  // Junk Removal / Hauling — home_services_low
-  moving: [-0.6, -0.3, 0, 0.16, 0.25],  // Moving Companies — home_services_low
-  appliance_repair: [-0.85, -0.43, 0, 0.2, 0.33],  // Appliance Repair — home_services_low
-  auto_repair: [-0.85, -0.43, 0, 0.2, 0.33],  // Auto Repair / Mechanic Shop — automotive
-  auto_body: [-0.85, -0.43, 0, 0.2, 0.33],  // Auto Body / Collision Repair — automotive
-  car_wash: [-0.28, -0.14, 0, 0.08, 0.14],  // Car Wash — Full Service / Detail — retail
-  auto_dealer_new: [-0.38, -0.19, 0, 0.1, 0.18],  // Auto Dealership — New — retail
-  auto_dealer_used: [-0.6, -0.3, 0, 0.16, 0.25],  // Auto Dealership — Used — retail
-  auto_rental: [-0.65, -0.33, 0, 0.18, 0.28],  // Auto Rental / Fleet Services — distribution
-  medical_primary: [-1.2, -0.62, 0, 0.32, 0.52],  // Medical Practice — Primary Care — healthcare_very_high
-  dental_general: [-2.5, -1.3, 0, 0.3, 0.5],  // Dental Practice — General — healthcare_very_high
-  dental_specialty: [-1.3, -0.68, 0, 0.32, 0.52],  // Dental Practice — Specialty (Ortho, Oral Surgery) — healthcare_very_high
-  optometry: [-2.5, -1.3, 0, 0.28, 0.45],  // Optometry / Optical — healthcare_very_high
-  veterinary: [-2.5, -1.3, 0, 0.3, 0.48],  // Veterinary Practice — healthcare_very_high
-  physical_therapy: [-0.9, -0.45, 0, 0.25, 0.4],  // Physical Therapy / Rehab — healthcare_high
-  mental_health: [-1.0, -0.52, 0, 0.25, 0.4],  // Mental Health / Behavioral Health — healthcare_high
-  aba_autism: [-0.8, -0.4, 0, 0.22, 0.35],  // Behavioral Health — ABA / Autism Services — healthcare_high
-  med_spa: [-1.0, -0.52, 0, 0.25, 0.4],  // Med Spa / Aesthetics — healthcare_high
-  home_health: [-0.75, -0.38, 0, 0.2, 0.33],  // Home Health / Home Care Agency — healthcare_high
-  hospice: [-0.75, -0.38, 0, 0.2, 0.33],  // Hospice / Palliative Care — healthcare_high
-  fitness: [-0.75, -0.38, 0, 0.2, 0.33],  // Fitness / Gym / Studio — personal_services
-  pharmacy: [-0.45, -0.23, 0, 0.13, 0.2],  // Pharmacy — Independent — retail
-  cpa_accounting: [-2.2, -1.1, 0, 0.32, 0.52],  // CPA / Accounting Firm — prof_services_high
-  law_general: [-2.5, -1.3, 0, 0.32, 0.52],  // Law Firm — General Practice — prof_services_high
-  law_pi: [-2.5, -1.3, 0, 0.32, 0.52],  // Law Firm — Personal Injury (Contingency) — prof_services_high
-  engineering: [-2.3, -1.2, 0, 0.32, 0.5],  // Engineering / Architecture Firm — prof_services_high
-  msp: [-0.8, -0.4, 0, 0.25, 0.42],  // IT Managed Services (MSP) — technology_high
-  marketing_agency: [-2.5, -1.3, 0, 0.32, 0.52],  // Marketing / Advertising Agency — prof_services_high
-  pr_firm: [-2.3, -1.2, 0, 0.32, 0.52],  // PR / Communications Firm — prof_services_high
-  mgmt_consulting: [-2.3, -1.2, 0, 0.35, 0.55],  // Management Consulting — prof_services_high
-  staffing: [-0.7, -0.35, 0, 0.18, 0.3],  // HR / Staffing / Recruiting — home_services_low
-  insurance_pc: [-2.2, -1.1, 0, 0.28, 0.45],  // Insurance Agency — P&C / Commercial — prof_services_high
-  insurance_life: [-2.2, -1.1, 0, 0.28, 0.45],  // Insurance Agency — Life / Benefits — prof_services_high
-  wealth_mgmt: [-2.5, -1.3, 0, 0.32, 0.5],  // Financial Planning / Wealth Management (RIA) — prof_services_high
-  mortgage: [-2.0, -1.0, 0, 0.25, 0.4],  // Mortgage Brokerage — prof_services_high
-  title_escrow: [-0.55, -0.28, 0, 0.15, 0.23],  // Title & Escrow Company — home_services_low
-  appraisal: [-2.2, -1.1, 0, 0.25, 0.4],  // Appraisal / Inspection Services — prof_services_high
-  saas: [-0.65, -0.33, 0, 0.28, 0.9],  // SaaS / Software — ARR-Based — technology_high
-  it_services: [-0.8, -0.4, 0, 0.23, 0.9],  // IT Services / Managed Services (MSP) — technology_high
-  custom_software: [-2.0, -1.0, 0, 0.28, 0.9],  // Custom Software Development — technology_high
-  tech_staffing: [-0.65, -0.33, 0, 0.18, 0.28],  // Technology Staffing / Consulting — home_services_low
-  digital_marketing: [-1.4, -0.78, 0, 0.3, 0.48],  // Digital Marketing / SEO Agency — prof_services_high
-  cybersecurity: [-0.85, -0.43, 0, 0.25, 0.9],  // Cybersecurity Services — technology_high
-  data_analytics: [-0.95, -0.48, 0, 0.25, 0.9],  // Data Analytics / BI Consulting — technology_high
-  manufacturing: [-0.85, -0.43, 0, 0.22, 0.35],  // General Manufacturing — manufacturing
-  mfg_specialty: [-0.95, -0.48, 0, 0.25, 0.4],  // Specialty / Niche Manufacturing — manufacturing
-  food_processing: [-0.85, -0.43, 0, 0.22, 0.35],  // Food Manufacturing / Processing — manufacturing
-  machine_shop: [-0.95, -0.48, 0, 0.23, 0.38],  // Machine Shop — manufacturing
-  distribution: [-0.65, -0.33, 0, 0.18, 0.3],  // Distribution / Wholesale — General — distribution
-  distribution_specialty: [-0.75, -0.38, 0, 0.2, 0.32],  // Distribution — Specialty / Niche — distribution
-  industrial_services: [-0.75, -0.38, 0, 0.2, 0.32],  // Industrial Services — distribution
-  gc_commercial: [-1.05, -0.53, 0, 0.25, 0.42],  // General Contracting — Commercial — construction
-  gc_residential: [-0.95, -0.48, 0, 0.23, 0.38],  // General Contracting — Residential — construction
-  contractor_mep: [-0.95, -0.48, 0, 0.23, 0.38],  // Specialty Contractor — MEP — construction
-  contractor_other: [-0.85, -0.43, 0, 0.2, 0.33],  // Specialty Contractor — Other — construction
-  real_estate_brokerage: [-2.5, -1.3, 0, 0.28, 0.45],  // Real Estate Brokerage — prof_services_high
-  property_mgmt: [-0.55, -0.28, 0, 0.15, 0.23],  // Property Management — home_services_low
-  real_estate_appraisal: [-2.2, -1.1, 0, 0.25, 0.4],  // Real Estate Appraisal — prof_services_high
-  commercial_cleaning: [-0.5, -0.25, 0, 0.13, 0.2],  // Commercial Cleaning / Janitorial — home_services_low
-  trucking_asset: [-0.65, -0.33, 0, 0.18, 0.3],  // Trucking — Asset-Based (OTR) — distribution
-  freight_brokerage: [-0.85, -0.43, 0, 0.22, 0.35],  // Trucking — Freight Brokerage (Non-Asset) — home_services_low
-  last_mile: [-0.55, -0.28, 0, 0.15, 0.23],  // Last Mile Delivery / Courier — distribution
-  moving_transport: [-0.65, -0.33, 0, 0.16, 0.25],  // Moving — Residential & Commercial — home_services_low
-  warehousing: [-0.55, -0.28, 0, 0.15, 0.23],  // Warehousing & 3PL — distribution
-  auto_transport: [-0.55, -0.28, 0, 0.15, 0.23],  // Auto Transport / Vehicle Hauling — distribution
-  childcare: [-0.75, -0.38, 0, 0.2, 0.32],  // Childcare Center / Daycare — education
-  private_school: [-0.85, -0.43, 0, 0.22, 0.35],  // Private School / K-12 — education
-  tutoring: [-0.95, -0.48, 0, 0.23, 0.38],  // Tutoring / Test Prep — education
-  vocational_school: [-0.75, -0.38, 0, 0.2, 0.32],  // Vocational / Trade School — education
-  elearning: [-0.65, -0.33, 0, 0.23, 0.9],  // Corporate Training / E-Learning — technology_high
-  assisted_living_small: [-0.95, -0.48, 0, 0.23, 0.38],  // Assisted Living — Small Residential (RCFE) — senior_care
-  assisted_living_large: [-0.7, -0.35, 0, 0.18, 0.3],  // Assisted Living — Larger Community — senior_care
-  home_care_private: [-0.8, -0.4, 0, 0.2, 0.33],  // Home Care Agency — Private Pay — senior_care
-  adult_day: [-0.7, -0.35, 0, 0.18, 0.3],  // Adult Day Services — senior_care
-  hair_salon: [-0.85, -0.43, 0, 0.2, 0.33],  // Hair Salon / Barber Shop — personal_services
-  day_spa: [-0.85, -0.43, 0, 0.2, 0.33],  // Spa / Day Spa — personal_services
-  tattoo: [-1.05, -0.53, 0, 0.23, 0.38],  // Tattoo / Piercing Studio — personal_services
-  funeral_home: [-0.65, -0.33, 0, 0.16, 0.25],  // Funeral Home / Death Care — personal_services
-  event_planning: [-1.05, -0.53, 0, 0.23, 0.38],  // Wedding / Event Planning — personal_services
-  photography: [-1.15, -0.58, 0, 0.25, 0.4],  // Photography / Videography Studio — personal_services
-  landscaping_design: [-0.95, -0.48, 0, 0.23, 0.38],  // Commercial Landscaping / Design-Build — construction
-  tree_service: [-0.85, -0.43, 0, 0.2, 0.33],  // Tree Service / Arborist — home_services_low
-  environmental: [-0.95, -0.48, 0, 0.23, 0.38],  // Environmental Services / Remediation — construction
-  waste_mgmt: [-0.55, -0.28, 0, 0.16, 0.25],  // Waste Management — Small Hauler — distribution
-  irrigation: [-0.75, -0.38, 0, 0.18, 0.3],  // Irrigation / Water Management — home_services_low
-  nursery: [-0.65, -0.33, 0, 0.16, 0.25],  // Wholesale Nursery — retail
-  publishing: [-2.0, -1.0, 0, 0.28, 0.45],  // Publishing — prof_services_high
-  printing: [-0.75, -0.38, 0, 0.18, 0.3],  // Graphics / Printing — manufacturing
-  other: [-0.85, -0.43, 0, 0.2, 0.33],  // Other / Not Listed — other
-};
-  const ownerDepAdj = ownerDepBySector[industry] || ownerDepBySector.other;
-  multipleAdj += ownerDepAdj[ownerDep - 1];
-
-  // Recurring revenue: 1=none(-0.5), 5=75%+(+1.0)
-  const recurringAdj = [-0.5, -0.2, 0.2, 0.6, 1.0];
-  multipleAdj += recurringAdj[recurring - 1];
-
-  // Customer concentration: 1=spread(+0.5), 5=>50%(-1.2)
-  const custConcAdj = [0.5, 0.2, -0.2, -0.7, -1.2];
-  multipleAdj += custConcAdj[custConc - 1];
-
-  // Systems: 1=none(-0.6), 5=full SOPs(+0.7)
-  const systemsAdj = [-0.6, -0.3, 0, 0.3, 0.7];
-  multipleAdj += systemsAdj[systems - 1];
-
-  // Management team: 1=just me(-0.8), 5=strong team(+0.8)
-  const mgmtAdj = [-0.8, -0.4, 0, 0.4, 0.8];
-  multipleAdj += mgmtAdj[mgmt - 1];
-
-  // Financial records: 1=messy(-0.5), 5=audited(+0.4)
-  const finRecAdj = [-0.5, -0.2, 0, 0.2, 0.4];
-  multipleAdj += finRecAdj[finRec - 1];
-
-  // Years bonus — percentage of baseline industry multiple
-  if (years >= 10) multipleAdj += baseMultiple * 0.10;       // 10% of base multiple
-  else if (years >= 5) multipleAdj += baseMultiple * 0.15;   // 15% of base multiple
-
-  // Revenue scale bonus — larger businesses command a premium due to greater
-  // institutional interest, lower perceived risk, and better systems/scale
-  let revenueBonus = 0;
-  if (revenue >= 15000000)      revenueBonus = 1.0; // $15M–$30M: strong premium
-  else if (revenue >= 5000000)  revenueBonus = 0.5; // $5M–$15M: moderate premium
-  // < $5M: no bonus
-  multipleAdj += revenueBonus;
-
-  // finalMultiple: floor at 1.0x
-  const finalMultiple = Math.max(1.0, baseMultiple + multipleAdj);
-
-  const baseVal  = adjEBITDA * finalMultiple;
-  const lowVal   = baseVal * 0.85;
-  const highVal  = baseVal * 1.15;
-
-  // ---- TRAJECTORY PROJECTION ----
-  // Find the top 2 worst factors and model what happens if they improve to "good"
-  // Trajectory: limit each factor improvement to max 2 slider levels from current position
-  function clampDelta(adjArray, currentIdx, maxLevels=2) {
-    const targetIdx = Math.min(currentIdx - 1 + maxLevels, 4); // cap at 2 levels up
-    return adjArray[targetIdx] - adjArray[currentIdx - 1];
-  }
-  const factorImpacts = [
-    { name: 'Reduce owner dependency',         delta: clampDelta(ownerDepAdj, ownerDep), poor: ownerDep <= 3 },
-    { name: 'Build management team',           delta: clampDelta(mgmtAdj, mgmt),         poor: mgmt <= 3 },
-    { name: 'Build recurring revenue',         delta: clampDelta(recurringAdj, recurring), poor: recurring <= 3 },
-    { name: 'Diversify customer base',         delta: clampDelta(custConcAdj.slice().reverse(), 6-custConc), poor: custConc >= 3 },
-    { name: 'Document systems & processes',    delta: clampDelta(systemsAdj, systems),    poor: systems <= 3 },
-    { name: 'Clean up financial records',      delta: clampDelta(finRecAdj, finRec),      poor: finRec <= 3 },
-    { name: 'Improve revenue growth',          delta: clampDelta(growthAdj, growth),      poor: growth <= 3 },
-  ].filter(f => f.poor && f.delta > 0)
-   .sort((a,b) => b.delta - a.delta)
-   .slice(0, 2);
-
-  const trajMultipleGain = factorImpacts.reduce((sum,f) => sum + f.delta, 0);
-  // Trajectory: cap potential gain at baseMultiple + 3.5, but never reduce below current finalMultiple
-  const trajMultiple     = Math.max(finalMultiple, Math.min(finalMultiple + trajMultipleGain, baseMultiple + 3.5));
-  const trajVal          = adjEBITDA * trajMultiple;
-  const trajUplift       = trajVal - baseVal;
-
-  // Score out of 100
-  let score = 50;
-  score += growthAdj[growth - 1] * 10;       // growth
-  score += ownerDepAdj[ownerDep - 1] * 7;    // owner dependency
-  score += mgmtAdj[mgmt - 1] * 7;            // management team strength
-  score += recurringAdj[recurring - 1] * 10; // recurring revenue
-  score += custConcAdj[custConc - 1] * 8;    // customer concentration
-  score += systemsAdj[systems - 1] * 8;      // systems & process maturity
-  score += finRecAdj[finRec - 1] * 6;        // financial record quality
-  if (years >= 10) score += 5;
-  score = Math.min(100, Math.max(10, Math.round(score)));
-
-  // Good / bad factors
-  const goodFactors = [];
-  const badFactors  = [];
-
-  // ── GROWTH ──────────────────────────────────────────────────────────────────
-  if (growth >= 4) goodFactors.push('Strong revenue growth signals momentum to buyers');
-  else if (growth <= 2) badFactors.push('Flat or declining revenue reduces buyer confidence');
-  else badFactors.push('Moving sales growth beyond low single percentages will attract more buyers');
-
-  // ── OWNER DEPENDENCY ────────────────────────────────────────────────────────
-  if (ownerDep >= 4) goodFactors.push('Low owner dependency means the business can run without you');
-  else if (ownerDep <= 2) badFactors.push('High owner dependency creates transition risk for buyers');
-
-  // ── MANAGEMENT TEAM ────────────────────────────────────────────────────────
-  if (mgmt >= 4) goodFactors.push('Strong management team increases buyer confidence in continuity');
-  else if (mgmt <= 2) badFactors.push('Thin management team creates risk for buyers post-transition');
-
-  // ── RECURRING REVENUE ────────────────────────────────────────────────────────
-  if (recurring >= 4) goodFactors.push('High recurring revenue increases predictability and value');
-  else if (recurring <= 2) badFactors.push('Low recurring revenue means less predictable future cash flow');
-  else badFactors.push('Higher recurring revenue will increase buyer confidence and valuation multiple');
-
-  // ── CUSTOMER CONCENTRATION ───────────────────────────────────────────────────
-  if (custConc <= 2) goodFactors.push('Diversified customer base reduces revenue concentration risk');
-  else if (custConc >= 4) badFactors.push('High customer concentration is a significant risk factor');
-  else badFactors.push('Lower customer concentration is better for valuation — reducing reliance on a single customer reduces buyer risk');
-
-  // ── SYSTEMS & PROCESS MATURITY ───────────────────────────────────────────────
-  if (systems >= 4) goodFactors.push('Well-documented systems/processes and strong software platform to manage data make the business transferable');
-  else if (systems <= 2) badFactors.push('Lack of systems, processes, and seamless access to electronically-stored data are taken as additional costs to a buyer');
-  else badFactors.push('Better systems, processes, and use of software to manage data will improve valuation');
-
-  // ── FINANCIAL RECORDS ────────────────────────────────────────────────────────
-  if (finRec >= 4) goodFactors.push('Accurate, well-organized financials and underlying operational data build buyer confidence and reduce perceived risk');
-  else if (finRec <= 2) badFactors.push('Poor financial record quality and incomplete operational data records will create friction in due diligence');
-  else badFactors.push('Cleaner financials and more complete operational data records will increase buyer confidence and valuation multiple');
-
-  // ── YEARS IN BUSINESS ────────────────────────────────────────────────────────
-  if (years >= 10) goodFactors.push(`${years} years of operating history demonstrates durability`);
-
-
-  // Recommendations (pick top 3 from pain points)
-  // Recommendations ordered by productizability — financial, pricing, growth,
-  // and systems improvements surface first. Owner dependency and management
-  // are real issues but structural/people-driven — harder to fix with a tool —
-  // so they appear last and only if no higher-priority triggers fired.
-  // ── PRIMARY RECS: triggered by slider ≤ 2 or ≥ 4 (poor/weak performance) ─────
-  // ── NEUTRAL RECS: triggered by slider = 3 (room to improve from middle) ──────
-  // Priority order: financial/data → growth → systems → recurring → custConc → ownerDep
-  // Neutral recs only fire if no poor-level rec for the same factor already fired
-  // Build a delta lookup keyed by the same factor variable
-  const recDeltas = {
-    finRec:    clampDelta(finRecAdj,   finRec),
-    growth:    clampDelta(growthAdj,   growth),
-    systems:   clampDelta(systemsAdj,  systems),
-    recurring: clampDelta(recurringAdj,recurring),
-    custConc:  clampDelta(custConcAdj.slice().reverse(), 6 - custConc),
-    ownerDep:  clampDelta(ownerDepAdj, ownerDep),
-    mgmt:      clampDelta(mgmtAdj,     mgmt),
+  const payload = {
+    industry, years_in_business: years, revenue, ebitda,
+    input_mode: activeMode, owner_salary: ownerSal, market_salary: marketSal,
+    addbacks, sliders: { growth, owner_dep: ownerDep, recurring, cust_conc: custConc, systems: systemsVal, fin_records: finRec },
   };
-
-  const allRecs = [
-    // ── POOR LEVEL TRIGGERS (≤2 / ≥4) ────────────────────────────────────────
-    {
-      trigger: finRec <= 2, factor: 'finRec',
-      title: 'Get Your Financials and Underlying Operational Data in Order',
-      desc: `Clean, well-organized financials are one of the highest-ROI improvements you can make before a sale. Buyers will scrutinize multiple years of results — unclear or inconsistent records create doubt, and doubt reduces value or delays closing. Start with monthly P&L reviews, clean up your chart of accounts, and work toward CPA-reviewed financials. In parallel, improve the quality and completeness of your underlying operational data — including customer sales history, purchase records, and inventory tracking (if applicable). Ensure this data is accurate, accessible, and tied to your financial results. When financials and operational data align, buyers can validate performance more easily, increasing confidence and reducing perceived risk.`
-    },
-    {
-      trigger: growth <= 2, factor: 'growth',
-      title: 'Build a Pricing/Margin Strategy and Focus on Growth',
-      desc: `Flat or declining revenue is one of the largest valuation discounts buyers apply. It raises concerns about competitiveness, demand, and future earnings potential. Start by evaluating pricing to ensure it reflects the value you deliver. Even modest price increases can have an outsized impact on EBITDA. For example, a 5% price increase on $3M of revenue with 10% margins increases EBITDA by roughly 50% — with no additional cost. Beyond pricing, focus on rebuilding a consistent growth engine. Identify your most effective customer acquisition channels, strengthen your sales process, and re-engage existing customers. Even modest, sustained growth materially improves buyer confidence and valuation.`
-    },
-    {
-      trigger: systems <= 2, factor: 'systems',
-      title: 'Improve Your Systems and Process Orientation',
-      desc: `Standard operating procedures for your core workflows make your business more transferable and reduce buyer risk. Start with the 5 to 10 processes most critical to revenue delivery. Document and pair these processes with the right systems — CRM, ERP, or POS — so they are consistently executed, measurable, and not dependent on individuals. Focus first on capturing reliable data around customers, sales activity, and operations. Centralized, well-organized data improves visibility, supports better decision-making, and increases buyer confidence during diligence. As a result, owner dependency declines as a natural byproduct — two problems, one solution.`
-    },
-    {
-      trigger: recurring <= 2, factor: 'recurring',
-      title: 'Build Recurring Revenue and Strengthen Customer Retention',
-      desc: `Recurring revenue — whether through contracts, subscriptions, or a loyal, repeat customer base — is valued at a higher multiple because it is predictable and reduces buyer risk. Start by identifying your most consistent customers and the products or services they purchase regularly. Where appropriate, introduce simple agreements such as annual contracts, service plans, or maintenance programs. At the same time, focus on strengthening customer retention through consistent service, communication, and value delivery. Even without formal contracts, a stable and loyal customer base that generates repeat business can meaningfully improve visibility into future revenue and support a higher valuation.`
-    },
-    {
-      trigger: custConc >= 4, factor: 'custConc',
-      title: 'Diversify Your Customer Base',
-      desc: `When one customer represents more than ~20% of revenue, buyers apply a meaningful discount due to concentration risk. Build a deliberate new business development effort to diversify your customer base. At the same time, evaluate the stability of your largest relationships — including contract terms, duration, and likelihood of retention. Set a clear target: reduce reliance on any single customer over time. Even partial progress can meaningfully improve perceived stability and valuation.`
-    },
-    {
-      trigger: ownerDep <= 2, factor: 'ownerDep',
-      title: 'Reduce Owner Dependency & Build Management Depth',
-      desc: `High owner dependency is a structural issue that takes time to address — but starting early makes it achievable and materially improves value. Begin by documenting key processes and decisions currently handled by the owner. Identify 1–2 employees with leadership potential and begin delegating meaningful responsibility to them, including customer relationships, operations, or financial oversight. Focus on gradually shifting day-to-day decision-making away from the owner while building confidence and accountability within the team. Even partial progress — where the business can operate for periods without the owner — reduces risk and increases buyer confidence. Ownership dependency can also be mitigated if the owner is willing to stay on for a period to smooth the transition to new ownership.`
-    },
-    // ── NEUTRAL LEVEL TRIGGERS (= 3, moderate — room to improve) ─────────────
-    {
-      trigger: finRec === 3, factor: 'finRec',
-      title: 'Improve Quality of Financials and Underlying Operational Data',
-      desc: `Your financial records and operational data likely provide a solid foundation. The opportunity is to improve consistency, depth, and alignment between them. Focus on producing timely, reliable monthly financials and refining your chart of accounts to better reflect how the business operates. At the same time, strengthen the organization and usability of your operational data — such as customer-level sales history, purchasing trends, and inventory records — and ensure it ties cleanly to your financial reporting. Better alignment between financial and operational data improves visibility, supports more informed decision-making, and makes the business easier for a buyer to diligence and operate.`
-    },
-    {
-      trigger: systems === 3, factor: 'systems',
-      title: 'Deepen Your Systems and Process Orientation',
-      desc: `Your business likely has some core processes and systems in place. The opportunity is to further standardize and integrate them to improve consistency, visibility, and scalability. Focus on tightening documentation around key workflows and ensuring your systems (CRM, ERP, POS) are fully utilized and connected. Look for gaps in data capture, reporting, and cross-functional visibility — particularly across sales, operations, and financial performance. Strengthening alignment between processes and systems will improve efficiency, enhance decision-making, and make the business easier for a buyer to understand and operate.`
-    },
-    {
-      trigger: growth === 3, factor: 'growth',
-      title: 'Refine Pricing/Margin Strategy & Improve Visibility into Growth Metrics',
-      desc: `Your business demonstrates a modest level of growth. The opportunity is to make that growth more consistent, measurable, and repeatable. Focus on refining pricing strategy, improving sales execution, and identifying the most effective drivers of new and repeat revenue. Strengthen visibility into key metrics such as customer acquisition, retention, and average revenue per customer. More consistent and predictable growth — even at moderate levels — increases buyer confidence and supports higher valuation multiples.`
-    },
-    {
-      trigger: custConc === 3, factor: 'custConc',
-      title: 'Improve Diversification in Your Customer Base',
-      desc: `Look to reduce customer concentration — further diversification can improve stability and buyer confidence. Focus on steadily expanding your customer base while maintaining strong relationships with key accounts. Monitor concentration levels over time and ensure no single customer remains or becomes disproportionately important. Where appropriate, strengthen visibility into customer-level revenue and retention, and consider contract structures that improve continuity. A balanced and well-understood customer base reduces risk and supports higher valuation multiples.`
-    },
-    {
-      trigger: ownerDep === 3, factor: 'ownerDep',
-      title: 'Reduce Owner Dependency & Strengthen Management Depth',
-      desc: `Your business has some level of management support in place. The opportunity is to further develop and formalize the team to reduce reliance on the owner and improve scalability. Clarify roles, responsibilities, and decision authority across key functions. Continue developing internal leaders and ensure they are accountable for results in areas such as sales, operations, and finance. Where appropriate, formalize reporting structures, performance expectations, and regular management reviews. A business with a capable, accountable management team that can operate independently is more transferable and commands a higher valuation.`
-    },
-    {
-      trigger: recurring === 3, factor: 'recurring',
-      title: 'Increase Consistency and Visibility of Recurring Revenue',
-      desc: `Your business benefits from some level of repeat or recurring revenue — either through contracts or a loyal customer base. The opportunity is to increase its consistency, visibility, and durability. Focus on converting repeat business into more structured arrangements where appropriate, while also strengthening customer retention and engagement. Improve visibility into key metrics such as repeat purchase behavior, customer concentration, and revenue consistency over time. Increasing the percentage of revenue that is either contractually committed or highly repeatable enhances predictability and supports higher valuation multiples.`
-    },
-  ];
-
-  // Sort triggered recs by 2-level trajectory delta descending — largest impact first
-  // This aligns the VIP recs with the "Key Improvements" order on the results page
-  const recs = allRecs
-    .filter(r => r.trigger)
-    .sort((a, b) => (recDeltas[b.factor] || 0) - (recDeltas[a.factor] || 0))
-    .slice(0, 3);
-  if (recs.length < 3) {
-    const fillers = [
-      { title: 'Review and Optimize Your Pricing', desc: `Many small businesses have not raised prices in years and are leaving significant margin on the table. Conduct a pricing audit: compare your rates to the market, identify your highest-margin offerings, and build a case for increases where your value justifies it.` },
-      { title: 'Start Your Exit Preparation Now', desc: `The businesses that achieve the best exits are those that prepared 2 to 3 years in advance. Use this window to address your specific weak spots, build clean financial history, and position your business as a premium asset when the time comes.` }
-    ];
-    fillers.forEach(f => { if (recs.length < 3) recs.push(f); });
+  if (activeMode === 'calc') {
+    payload.earnings = parseCurrency((document.getElementById('g-earnings') || {value:''}).value) || 0;
+    payload.interest_expense = parseCurrency((document.getElementById('g-interest') || {value:''}).value) || 0;
+    payload.taxes_paid = parseCurrency((document.getElementById('g-taxes') || {value:''}).value) || 0;
+    payload.depreciation_amort = parseCurrency((document.getElementById('g-da') || {value:''}).value) || 0;
   }
 
+  // Call backend calculator
+  let r;
+  try {
+    const res = await fetch(`${API_BASE}/api/calculate`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || res.statusText); }
+    r = await res.json();
+  } catch (e) {
+    console.error('EdgeFour: calculate failed:', e.message);
+    alert('We couldn\'t calculate your valuation right now. Please try again.');
+    return;
+  }
 
-  // Score descriptor
-  let scoreDesc = '';
-  if (score >= 80) scoreDesc = 'Excellent — your business is well-positioned for a premium exit.';
-  else if (score >= 65) scoreDesc = 'Good — solid fundamentals with specific opportunities to increase value.';
-  else if (score >= 50) scoreDesc = 'Fair — meaningful improvements could significantly lift your valuation.';
-  else scoreDesc = 'Developing — there are clear steps that could substantially increase what buyers will pay.';
-
-  // ---- RENDER ----
+  // ---- RENDER RESULTS FROM BACKEND RESPONSE ----
   document.getElementById('results-biz-name').textContent = bizName;
   document.getElementById('results-date').textContent = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-  document.getElementById('score-num').textContent = score;
-  document.getElementById('score-desc').textContent = scoreDesc;
+  document.getElementById('score-num').textContent = r.value_score;
+  document.getElementById('score-desc').textContent = r.score_band_description;
 
-  // Awareness line — contextual message based on score
-  const awarenessLines = {
-    low:  'Most owners in your position have never seen this type of analysis. The gap between where you are and where you could be is real — and closeable.',
-    mid:  `Your business has meaningful value. What many owners don't realize is how much specific, targeted improvements can add to that number before a sale.`,
-    high: 'You are in a strong position. The owners who protect and grow this value are the ones who start preparing well before they need to.'
-  };
   const awarenessEl = document.getElementById('results-awareness');
-  if (awarenessEl) {
-    awarenessEl.textContent = score < 50 ? awarenessLines.low : score < 70 ? awarenessLines.mid : awarenessLines.high;
-  }
+  if (awarenessEl) awarenessEl.textContent = r.score_band + ' · Business Value Score';
 
-  document.getElementById('val-low').textContent  = formatMoney(lowVal);
-  document.getElementById('val-base').textContent = formatMoney(baseVal);
-  document.getElementById('val-high').textContent = formatMoney(highVal);
-  document.getElementById('adj-ebitda').textContent = formatMoney(adjEBITDA);
+  document.getElementById('val-low').textContent  = formatMoney(r.valuation_low);
+  document.getElementById('val-base').textContent = formatMoney(r.valuation_base);
+  document.getElementById('val-high').textContent = formatMoney(r.valuation_high);
+  document.getElementById('adj-ebitda').textContent = formatMoney(r.adj_ebitda);
+  document.getElementById('est-multiple').textContent = r.estimated_multiple.toFixed(1) + 'x';
 
-  document.getElementById('est-multiple').textContent = finalMultiple.toFixed(1) + 'x';
-
-  // Show revenue scale bonus footnote if applicable
   const revBonusLine = document.getElementById('revenue-bonus-line');
   const revBonusAmt  = document.getElementById('revenue-bonus-amt');
-  if (revBonusLine && revBonusAmt && revenueBonus > 0) {
-    const tier = revenue >= 15000000 ? '$15M–$30M' : '$5M–$15M';
-    revBonusAmt.textContent = `+${revenueBonus.toFixed(1)}x revenue scale premium (${tier} revenue)`;
+  if (revBonusLine && revBonusAmt && r.revenue_scale_bonus > 0) {
+    revBonusAmt.textContent = `+${r.revenue_scale_bonus.toFixed(1)}x revenue scale premium`;
     revBonusLine.style.display = 'block';
   } else if (revBonusLine) {
     revBonusLine.style.display = 'none';
   }
 
-  // ---- RENDER TRAJECTORY ----
-  document.getElementById('traj-today').textContent    = formatMoney(baseVal);
-  document.getElementById('traj-improved').textContent = formatMoney(trajVal);
-  if (trajUplift > 0 && factorImpacts.length > 0) {
-    document.getElementById('traj-uplift').textContent = `${formatMoney(trajUplift)} increase in value with key improvements`;
-    document.getElementById('traj-actions').innerHTML = factorImpacts.map((f,i) =>
+  // Trajectory
+  const traj = r.trajectory;
+  document.getElementById('traj-today').textContent    = formatMoney(r.valuation_base);
+  document.getElementById('traj-improved').textContent = formatMoney(traj.new_valuation_high);
+  if (traj.uplift_amount > 0 && traj.top_factors.length > 0) {
+    document.getElementById('traj-uplift').textContent = `${formatMoney(traj.uplift_amount)} increase in value with key improvements`;
+    document.getElementById('traj-actions').innerHTML = traj.top_factors.map((f,i) =>
       `<div class="traj-action-item">
         <div class="traj-action-dot">${i+1}</div>
         <span>${f.name} <span style="color:var(--gold);font-weight:600;">(+${f.delta.toFixed(1)}x multiple)</span></span>
@@ -3279,75 +2865,60 @@ function calculateAndShow() {
     document.getElementById('trajectory-card').style.display = 'none';
   }
 
-  // Good factors
-  const goodEl = document.getElementById('factors-good');
-  goodEl.innerHTML = (goodFactors.length > 0 ? goodFactors : ['No standout strengths identified — use the recommendations below to build your value.']).slice(0,4).map(f =>
+  // Good / bad factors
+  const goodFactors = r.good_factors.length > 0 ? r.good_factors.map(f => f.description) : ['No standout strengths identified — use the recommendations below to build your value.'];
+  const badFactors  = r.bad_factors.length > 0 ? r.bad_factors.map(f => f.description) : ['No major red flags — great work!'];
+  document.getElementById('factors-good').innerHTML = goodFactors.slice(0,4).map(f =>
+    `<div class="factor-item"><div class="factor-dot"></div><span>${f}</span></div>`
+  ).join('');
+  document.getElementById('factors-bad').innerHTML = badFactors.slice(0,4).map(f =>
     `<div class="factor-item"><div class="factor-dot"></div><span>${f}</span></div>`
   ).join('');
 
-  // Bad factors
-  const badEl = document.getElementById('factors-bad');
-  badEl.innerHTML = (badFactors.length > 0 ? badFactors : ['No major red flags — great work!']).slice(0,4).map(f =>
-    `<div class="factor-item"><div class="factor-dot"></div><span>${f}</span></div>`
-  ).join('');
-
-  // Recs — results page (numbered circles)
-  document.getElementById('results-recommendations').innerHTML = recs.map((r, i) =>
+  // Recommendations — results page
+  const recs = r.vip_recommendations;
+  document.getElementById('results-recommendations').innerHTML = recs.map((rec, i) =>
     `<div class="rec-item">
       <div class="rec-diamond" style="background:var(--gold);color:var(--navy);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">${i+1}</div>
       <div class="rec-content">
-        <div class="rec-title">${r.title}</div>
-        <div class="rec-desc">${r.desc}</div>
+        <div class="rec-title">${rec.title}</div>
+        <div class="rec-desc">${rec.body}</div>
       </div>
     </div>`
   ).join('');
 
-  // Recs — snapshot page (diamonds)
-  document.getElementById('recommendations').innerHTML = recs.map((r) =>
+  // Recommendations — snapshot page
+  document.getElementById('recommendations').innerHTML = recs.map((rec) =>
     `<div class="rec-item">
       <div class="rec-diamond">◆</div>
       <div class="rec-content">
-        <div class="rec-title">${r.title}</div>
-        <div class="rec-desc">${r.desc}</div>
+        <div class="rec-title">${rec.title}</div>
+        <div class="rec-desc">${rec.body}</div>
       </div>
     </div>`
   ).join('');
 
-  // ── Save valuation to Supabase ──
+  // Store result for quiz/snapshot
+  window._lastCalcResult = r;
+
+  // Save valuation to backend
   saveValuation({
-    business_name:      bizName,
-    industry:           industry,
-    city:               document.getElementById('city').value || '',
-    state:              document.getElementById('state-value').value || '',
-    years_in_business:  years,
-    employees:          parseInt(document.getElementById('employees').value) || 0,
-    input_mode:         activeMode,
-    revenue:            revenue,
-    ebitda:             ebitda,
-    // Mode B component fields (null if Mode A was used)
-    earnings:           activeMode === 'calc' ? parseCurrency((document.getElementById('g-earnings') || {value:''}).value) || null : null,
-    interest_expense:   activeMode === 'calc' ? parseCurrency((document.getElementById('g-interest') || {value:''}).value) || null : null,
-    taxes_paid:         activeMode === 'calc' ? parseCurrency((document.getElementById('g-taxes') || {value:''}).value) || null : null,
-    depreciation_amort: activeMode === 'calc' ? parseCurrency((document.getElementById('g-da') || {value:''}).value) || null : null,
-    owner_salary:       ownerSal,
-    market_salary:      marketSal,
-    addbacks:           addbacks,
-    adj_ebitda:         adjEBITDA,
-    valuation_low:      Math.round(lowVal),
-    valuation_base:     Math.round(baseVal),
-    valuation_high:     Math.round(highVal),
-    base_multiple:      baseMultiple,
-    estimated_multiple: parseFloat(finalMultiple.toFixed(2)),
-    years_bonus:        parseFloat((years >= 10 ? baseMultiple * 0.10 : years >= 5 ? baseMultiple * 0.15 : 0).toFixed(3)),
-    revenue_scale_bonus: revenueBonus,
-    value_score:        score,
-    growth_slider:      growth,
-    owner_dep_slider:   ownerDep,
-    recurring_slider:   recurring,
-    cust_conc_slider:   custConc,
-    systems_slider:     systems,
-    mgmt_slider:        mgmt,
-    fin_records_slider: finRec,
+    business_name: bizName, industry,
+    city: document.getElementById('city').value || '',
+    state: document.getElementById('state-value').value || '',
+    years_in_business: years,
+    employees: parseInt(document.getElementById('employees').value) || 0,
+    input_mode: activeMode, revenue, ebitda,
+    earnings: payload.earnings ?? null, interest_expense: payload.interest_expense ?? null,
+    taxes_paid: payload.taxes_paid ?? null, depreciation_amort: payload.depreciation_amort ?? null,
+    owner_salary: ownerSal, market_salary: marketSal, addbacks,
+    adj_ebitda: r.adj_ebitda, base_multiple: r.base_multiple,
+    estimated_multiple: r.estimated_multiple, years_bonus: r.years_bonus,
+    revenue_scale_bonus: r.revenue_scale_bonus,
+    valuation_low: r.valuation_low, valuation_base: r.valuation_base, valuation_high: r.valuation_high,
+    value_score: r.value_score,
+    growth_slider: growth, owner_dep_slider: ownerDep, recurring_slider: recurring,
+    cust_conc_slider: custConc, systems_slider: systemsVal, fin_records_slider: finRec,
   });
 
   goTo('section-results');
@@ -3397,7 +2968,6 @@ function restartApp() {
   updateSliderLabel('recurring','recurring-display',recurringLabels);
   updateSliderLabel('cust-conc','cust-conc-display',custConcLabels);
   updateSliderLabel('systems','systems-display',systemsLabels);
-  updateSliderLabel('mgmt','mgmt-display',mgmtLabels);
   updateSliderLabel('fin-records','fin-records-display',finRecordsLabels);
   goTo('section-landing');
 }
@@ -4199,6 +3769,22 @@ function validateBizInfoAndContinue() {
   }
 
   if (valid) {
+    // Save step 1 to backend
+    fetch(`${API_BASE}/api/save-step1`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id: getOrCreateSessionId(),
+        business_name: document.getElementById('biz-name').value.trim(),
+        industry: document.getElementById('industry').value || 'other',
+        city: document.getElementById('city').value.trim(),
+        state: document.getElementById('state-value').value || '',
+        years_in_business: parseInt(document.getElementById('years').value) || 0,
+        employees: parseInt(document.getElementById('employees').value) || 0,
+      }),
+    }).then(res => res.ok ? res.json() : null)
+      .then(data => { if (data?.valuation_id) _currentValuationId = data.valuation_id; })
+      .catch(e => console.warn('EdgeFour: save-step1 failed:', e.message));
+
     const industry = document.getElementById('industry').value || 'other';
     const notice = INDUSTRY_NOTICES[industry];
     if (notice) {
@@ -4402,6 +3988,23 @@ function getOrCreateSessionId() {
   return id;
 }
 
+// Save session on page load
+(function initSession() {
+  const sid = getOrCreateSessionId();
+  const params = new URLSearchParams(window.location.search);
+  fetch(`${API_BASE}/api/save-session`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      session_id: sid,
+      referrer: document.referrer || '',
+      utm_source: params.get('utm_source') || '',
+      utm_medium: params.get('utm_medium') || '',
+      utm_campaign: params.get('utm_campaign') || '',
+      user_agent: navigator.userAgent,
+    }),
+  }).catch(e => console.warn('EdgeFour: save-session failed:', e.message));
+})();
+
 function getResultNumber(id) {
   const t = (document.getElementById(id)?.textContent || '').trim();
   const n = Number(t.replace(/[^0-9.-]/g, ''));
@@ -4444,7 +4047,6 @@ async function saveValuation(data) {
         recurring: Number(data.recurring_slider || 3),
         cust_conc: Number(data.cust_conc_slider || 3),
         systems: Number(data.systems_slider || 3),
-        mgmt: Number(data.mgmt_slider || 3),
         fin_records: Number(data.fin_records_slider || 3),
       },
     };
