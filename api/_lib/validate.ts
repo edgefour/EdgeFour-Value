@@ -12,9 +12,9 @@ export function validateEmail(email: string): ValidationResult {
 }
 
 const BOUNDS: Record<string, { min: number; max: number }> = {
-  revenue: { min: 0, max: 10_000_000_000 },
-  ebitda: { min: -1_000_000_000, max: 10_000_000_000 },
-  earnings: { min: -1_000_000_000, max: 10_000_000_000 },
+  revenue: { min: 0, max: 500_000_000_000 },
+  ebitda: { min: -500_000_000_000, max: 500_000_000_000 },
+  earnings: { min: -500_000_000_000, max: 500_000_000_000 },
   interest_expense: { min: 0, max: 1_000_000_000 },
   taxes_paid: { min: 0, max: 1_000_000_000 },
   depreciation_amort: { min: 0, max: 1_000_000_000 },

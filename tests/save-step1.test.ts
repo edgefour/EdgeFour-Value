@@ -1,12 +1,13 @@
 import { describe, expect, test } from 'bun:test'
 import { POST } from '../api/save-step1.ts'
-import { postRequest, json } from './helpers.ts'
+import { postRequest, json, createTestSession } from './helpers.ts'
 
 describe('save-step1', () => {
   test('returns valuation_id for valid input', async () => {
+    const session_id = await createTestSession()
     const res = await POST(
       postRequest({
-        session_id: crypto.randomUUID(),
+        session_id,
         business_name: 'Acme Corp',
         industry: 'Professional Services',
         years_in_business: 10,
