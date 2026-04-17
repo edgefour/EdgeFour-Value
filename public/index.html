@@ -3,30 +3,914 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EdgeFour Value</title>
+  <title>EdgeFour Value — Business Valuation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg: #f6f3ec;
+      --bg-elevated: #ffffff;
+      --ink: #121826;
+      --muted: #4a5568;
+      --muted2: #6b7280;
+      --border: #e2ddd4;
+      --border-strong: #c9c2b4;
+      --navy: #0f1f3a;
+      --navy-hover: #162a4d;
+      --accent: #b45309;
+      --accent-soft: #fff7ed;
+      --teal: #0d5c4d;
+      --teal-soft: #e6f5f2;
+      --danger: #b91c1c;
+      --radius: 12px;
+      --radius-lg: 20px;
+      --shadow: 0 1px 2px rgba(15, 31, 58, 0.06), 0 8px 24px rgba(15, 31, 58, 0.08);
+      --font-sans: "Source Sans 3", system-ui, -apple-system, sans-serif;
+      --font-display: "Fraunces", Georgia, serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
     body {
-      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      font-family: var(--font-sans);
+      font-size: 1rem;
+      line-height: 1.55;
+      color: var(--ink);
+      background: var(--bg);
+      min-height: 100vh;
+    }
+
+    .skip-link {
+      position: absolute;
+      left: -9999px;
+      z-index: 999;
+      padding: 0.75rem 1rem;
+      background: var(--navy);
+      color: #fff;
+    }
+    .skip-link:focus { left: 0; top: 0; }
+
+    .shell {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 1.25rem 1.25rem 3rem;
+    }
+
+    @media (min-width: 640px) {
+      .shell { padding: 2rem 1.5rem 4rem; }
+    }
+
+    .masthead {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.75rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .brand-mark {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.35rem;
+      letter-spacing: -0.02em;
+      color: var(--navy);
+    }
+
+    .brand-tag {
+      font-size: 0.9rem;
+      color: var(--muted);
+      max-width: 28rem;
+    }
+
+    .btn-text {
+      font: inherit;
+      font-weight: 600;
+      color: var(--muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .btn-text:hover { color: var(--navy); }
+
+    .stepper {
       display: flex;
       align-items: center;
+      gap: 0.35rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted2);
+    }
+
+    .stepper[data-phase="form"] .step-dot[data-step="1"],
+    .stepper[data-phase="form"] .step-dot[data-step="2"],
+    .stepper[data-phase="form"] .step-dot[data-step="3"] { opacity: 1; }
+
+    .step-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--border-strong);
+      opacity: 0.45;
+    }
+    .step-dot.is-active {
+      background: var(--teal);
+      opacity: 1;
+      box-shadow: 0 0 0 3px var(--teal-soft);
+    }
+
+    .panel {
+      background: var(--bg-elevated);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+    }
+
+    @media (min-width: 640px) {
+      .panel { padding: 2rem 2.25rem; }
+    }
+
+    .panel h2 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 1.5rem;
+      margin: 0 0 0.35rem;
+      letter-spacing: -0.02em;
+    }
+
+    .panel .lede {
+      margin: 0 0 1.5rem;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+
+    .grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    @media (min-width: 560px) {
+      .grid-2 { grid-template-columns: 1fr 1fr; }
+    }
+
+    label.field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    label.field span.label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .hint {
+      font-size: 0.8rem;
+      color: var(--muted2);
+      font-weight: 400;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="number"],
+    select,
+    textarea {
+      font: inherit;
+      padding: 0.65rem 0.75rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-strong);
+      background: #fff;
+      color: var(--ink);
+      width: 100%;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: 2px solid var(--teal);
+      outline-offset: 1px;
+      border-color: var(--teal);
+    }
+
+    .field-error {
+      font-size: 0.8rem;
+      color: var(--danger);
+      min-height: 1.1em;
+    }
+
+    .mode-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .mode-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      flex: 1;
+      min-width: 200px;
+      background: #fafafa;
+    }
+
+    .mode-option:has(input:checked) {
+      border-color: var(--teal);
+      background: var(--teal-soft);
+    }
+
+    .mode-option input { margin-top: 0.2rem; }
+
+    .mode-option strong { display: block; font-size: 0.95rem; }
+    .mode-option span { font-size: 0.85rem; color: var(--muted); }
+
+    .slider-block {
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .slider-block:last-child { border-bottom: none; }
+
+    .slider-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.75rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .slider-head .name { font-weight: 600; font-size: 0.95rem; }
+    .slider-head .val {
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      color: var(--teal);
+      font-size: 0.9rem;
+    }
+
+    .slider-scale {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: var(--muted2);
+      margin-top: 0.25rem;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--teal);
+      height: 6px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-top: 1.75rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .actions-right { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+    .btn {
+      font: inherit;
+      font-weight: 600;
+      padding: 0.7rem 1.35rem;
+      border-radius: var(--radius);
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
       justify-content: center;
-      min-height: 100vh;
-      margin: 0;
-      background: #f8f9fa;
-      color: #1a1a2e;
+      gap: 0.5rem;
+      transition: background 0.15s, transform 0.05s;
     }
-    .container {
+
+    .btn:active { transform: translateY(1px); }
+
+    .btn-primary {
+      background: var(--navy);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--navy-hover); }
+
+    .btn-secondary {
+      background: #fff;
+      color: var(--navy);
+      border: 1px solid var(--border-strong);
+    }
+    .btn-secondary:hover { background: #fafafa; }
+
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .view { display: none; }
+    .view.is-visible { display: block; }
+
+    .results-hero {
       text-align: center;
-      padding: 2rem;
+      padding: 0.5rem 0 1.25rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.5rem;
     }
-    h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
-    p { color: #555; font-size: 1.1rem; }
+
+    .results-hero .range {
+      font-family: var(--font-display);
+      font-size: clamp(1.75rem, 5vw, 2.35rem);
+      font-weight: 700;
+      color: var(--navy);
+      letter-spacing: -0.03em;
+    }
+
+    .results-hero .sub {
+      margin-top: 0.35rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (min-width: 520px) {
+      .stat-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    .stat {
+      background: #faf9f6;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.75rem 0.85rem;
+    }
+
+    .stat .k { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted2); font-weight: 600; }
+    .stat .v { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 1.05rem; margin-top: 0.2rem; }
+
+    .score-ring-wrap {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      padding: 1rem;
+      background: linear-gradient(135deg, var(--teal-soft), #fff);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+
+    .score-num {
+      font-family: var(--font-display);
+      font-size: 2.75rem;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--teal);
+      min-width: 4.5rem;
+      text-align: center;
+    }
+
+    .score-copy .band { font-weight: 700; font-size: 1.05rem; }
+    .score-copy p { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.95rem; }
+
+    .factor-list h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted2);
+      margin: 0 0 0.65rem;
+    }
+
+    .factor-card {
+      padding: 0.75rem 0.9rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      margin-bottom: 0.5rem;
+      background: #fff;
+    }
+
+    .factor-card.good { border-left: 4px solid var(--teal); }
+    .factor-card.bad { border-left: 4px solid var(--accent); }
+
+    .factor-card .t { font-weight: 600; }
+    .factor-card .m { font-size: 0.85rem; color: var(--muted2); }
+    .factor-card p { margin: 0.35rem 0 0; font-size: 0.92rem; color: var(--muted); }
+
+    .trajectory {
+      margin-top: 1.25rem;
+      padding: 1.25rem;
+      border-radius: var(--radius);
+      background: var(--accent-soft);
+      border: 1px solid #fed7aa;
+    }
+
+    .trajectory h3 {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      margin: 0 0 0.5rem;
+    }
+
+    .trajectory .new-range {
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: var(--accent);
+      font-size: 1.1rem;
+    }
+
+    .vip-grid {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    @media (min-width: 640px) {
+      .vip-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .vip-card {
+      padding: 1rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .vip-card h4 {
+      font-size: 0.95rem;
+      margin: 0;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    .vip-card p { margin: 0; font-size: 0.88rem; color: var(--muted); }
+
+    .banner-notice {
+      display: none;
+      margin-bottom: 1rem;
+      padding: 0.85rem 1rem;
+      border-radius: var(--radius);
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      font-size: 0.92rem;
+      color: #1e3a8a;
+    }
+    .banner-notice.is-visible { display: block; }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 31, 58, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 100;
+    }
+    .modal-overlay.is-open { display: flex; }
+
+    .modal {
+      background: #fff;
+      border-radius: var(--radius-lg);
+      max-width: 520px;
+      width: 100%;
+      max-height: 90vh;
+      overflow: auto;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .modal h3 { margin-top: 0; font-family: var(--font-display); }
+
+    .cta-calendly {
+      margin-top: 1.5rem;
+      padding: 1.25rem;
+      border-radius: var(--radius);
+      background: var(--navy);
+      color: #fff;
+      text-align: center;
+    }
+
+    .cta-calendly p { margin: 0 0 1rem; opacity: 0.92; font-size: 0.95rem; }
+
+    .btn-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.85rem 1.5rem;
+      background: #fff;
+      color: var(--navy);
+      font-weight: 700;
+      border-radius: var(--radius);
+      text-decoration: none;
+      font-size: 1rem;
+    }
+    .btn-cta:hover { background: #f0f4ff; }
+
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(246, 243, 236, 0.75);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+    .loading-overlay.is-open { display: flex; }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--navy);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    footer.site-footer {
+      margin-top: 2.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--muted2);
+      text-align: center;
+    }
+
+    footer.site-footer a { color: var(--teal); }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>EdgeFour Value</h1>
-    <p>Coming soon.</p>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <div id="loading" class="loading-overlay" aria-hidden="true">
+    <div class="spinner" role="status" aria-label="Loading"></div>
   </div>
+
+  <div class="shell">
+    <header class="masthead">
+      <div class="brand">
+        <span class="brand-mark">EdgeFour Value</span>
+        <p class="brand-tag">Estimate your business value, see what drives it, and get a concise improvement plan—built for owners planning what’s next.</p>
+      </div>
+      <div class="stepper" id="stepper" data-phase="form" aria-hidden="false">
+        <span class="step-dot is-active" data-step="1" title="Business"></span>
+        <span class="step-dot" data-step="2" title="Financials"></span>
+        <span class="step-dot" data-step="3" title="Drivers"></span>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- Form steps -->
+      <section id="view-business" class="view is-visible" data-view="business_info">
+        <div class="panel">
+          <h2>Business profile</h2>
+          <p class="lede">Tell us about the company so we can anchor the valuation in the right context.</p>
+
+          <div class="grid">
+            <label class="field">
+              <span class="label">Business name</span>
+              <input type="text" id="business_name" name="business_name" autocomplete="organization" required>
+              <span class="field-error" id="err-business_name"></span>
+            </label>
+            <label class="field">
+              <span class="label">Industry</span>
+              <select id="industry" name="industry" required>
+                <option value="">Select an industry…</option>
+                <optgroup label="Professional &amp; business services">
+                  <option>Accounting &amp; tax</option>
+                  <option>Business consulting</option>
+                  <option>IT services &amp; managed services</option>
+                  <option>Marketing &amp; advertising</option>
+                  <option>Legal services</option>
+                </optgroup>
+                <optgroup label="Construction &amp; trades">
+                  <option>Commercial construction</option>
+                  <option>Residential construction</option>
+                  <option>Electrical / HVAC / plumbing</option>
+                </optgroup>
+                <optgroup label="Healthcare">
+                  <option>Medical practice</option>
+                  <option>Dental practice</option>
+                  <option>Home health &amp; care</option>
+                </optgroup>
+                <optgroup label="Manufacturing &amp; distribution">
+                  <option>Manufacturing</option>
+                  <option>Wholesale distribution</option>
+                  <option>Logistics &amp; transportation</option>
+                </optgroup>
+                <optgroup label="Consumer &amp; retail">
+                  <option>Retail</option>
+                  <option>Food &amp; beverage</option>
+                  <option>Hospitality</option>
+                </optgroup>
+                <option>Other</option>
+              </select>
+              <span class="field-error" id="err-industry"></span>
+            </label>
+          </div>
+
+          <div class="grid grid-2" style="margin-top:1rem">
+            <label class="field">
+              <span class="label">City</span>
+              <input type="text" id="city" name="city" autocomplete="address-level2" required>
+              <span class="field-error" id="err-city"></span>
+            </label>
+            <label class="field">
+              <span class="label">State</span>
+              <select id="state" name="state" required>
+                <option value="">State…</option>
+              </select>
+              <span class="field-error" id="err-state"></span>
+            </label>
+          </div>
+
+          <div class="grid grid-2" style="margin-top:1rem">
+            <label class="field">
+              <span class="label">Years in business</span>
+              <input type="number" id="years_in_business" name="years_in_business" min="0" max="200" step="1" required>
+              <span class="field-error" id="err-years_in_business"></span>
+            </label>
+            <label class="field">
+              <span class="label">Employees (FTE)</span>
+              <input type="number" id="employees" name="employees" min="0" step="1" required>
+              <span class="field-error" id="err-employees"></span>
+            </label>
+          </div>
+
+          <div class="actions">
+            <span></span>
+            <div class="actions-right">
+              <button type="button" class="btn btn-primary" id="btn-business-next">Continue</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-financials" class="view" data-view="financials">
+        <div class="panel">
+          <h2>Financial snapshot</h2>
+          <p class="lede">We use EBITDA-based multiples. Choose how you want to provide earnings.</p>
+
+          <div class="mode-row" role="radiogroup" aria-label="Earnings input mode">
+            <label class="mode-option">
+              <input type="radio" name="input_mode" id="mode_know" value="know" checked>
+              <span>
+                <strong>I know my EBITDA</strong>
+                <span>Fastest path—enter revenue and EBITDA directly.</span>
+              </span>
+            </label>
+            <label class="mode-option">
+              <input type="radio" name="input_mode" id="mode_calc" value="calc">
+              <span>
+                <strong>Calculate from net income</strong>
+                <span>We’ll approximate EBITDA from your P&amp;L lines.</span>
+              </span>
+            </label>
+          </div>
+
+          <div class="grid grid-2">
+            <label class="field">
+              <span class="label">Annual revenue</span>
+              <input type="number" id="revenue" name="revenue" min="0" step="1000" placeholder="e.g. 2500000" required>
+              <span class="field-error" id="err-revenue"></span>
+            </label>
+            <label class="field" id="wrap-ebitda">
+              <span class="label">EBITDA</span>
+              <input type="number" id="ebitda" name="ebitda" step="1000" placeholder="e.g. 450000" required>
+              <span class="field-error" id="err-ebitda"></span>
+            </label>
+          </div>
+
+          <div id="calc-fields" class="grid" style="display:none;margin-top:1rem">
+            <div class="grid grid-2">
+              <label class="field">
+                <span class="label">Net income (earnings)</span>
+                <input type="number" id="earnings" name="earnings" step="1000">
+                <span class="field-error" id="err-earnings"></span>
+              </label>
+              <label class="field">
+                <span class="label">Interest expense</span>
+                <input type="number" id="interest_expense" name="interest_expense" min="0" step="1000">
+                <span class="field-error" id="err-interest_expense"></span>
+              </label>
+            </div>
+            <div class="grid grid-2">
+              <label class="field">
+                <span class="label">Taxes paid</span>
+                <input type="number" id="taxes_paid" name="taxes_paid" min="0" step="1000">
+                <span class="field-error" id="err-taxes_paid"></span>
+              </label>
+              <label class="field">
+                <span class="label">Depreciation &amp; amortization</span>
+                <input type="number" id="depreciation_amort" name="depreciation_amort" min="0" step="1000">
+                <span class="field-error" id="err-depreciation_amort"></span>
+              </label>
+            </div>
+          </div>
+
+          <h3 style="font-size:1rem;margin:1.5rem 0 0.75rem;font-family:var(--font-display)">Owner adjustments</h3>
+          <p class="hint" style="margin:0 0 0.75rem">Normalize compensation and one-time items so buyers see sustainable earnings.</p>
+
+          <div class="grid grid-2">
+            <label class="field">
+              <span class="label">Owner salary / draws taken</span>
+              <input type="number" id="owner_salary" name="owner_salary" min="0" step="1000" value="0" required>
+              <span class="field-error" id="err-owner_salary"></span>
+            </label>
+            <label class="field">
+              <span class="label">Market-rate salary for your role</span>
+              <input type="number" id="market_salary" name="market_salary" min="0" step="1000" value="0" required>
+              <span class="field-error" id="err-market_salary"></span>
+            </label>
+          </div>
+          <label class="field" style="margin-top:1rem">
+            <span class="label">Add-backs <span class="hint">(discretionary expenses, one-time costs)</span></span>
+            <input type="number" id="addbacks" name="addbacks" min="0" step="1000" value="0" required>
+            <span class="field-error" id="err-addbacks"></span>
+          </label>
+
+          <div class="actions">
+            <button type="button" class="btn-text" id="btn-financials-back">Back</button>
+            <div class="actions-right">
+              <button type="button" class="btn btn-primary" id="btn-financials-next">Continue</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-drivers" class="view" data-view="value_drivers">
+        <div class="panel">
+          <h2>Value drivers</h2>
+          <p class="lede">Rate each area from 1 (needs work) to 5 (strong). This shapes the multiple applied to your earnings.</p>
+
+          <div id="sliders-root"></div>
+
+          <div class="actions">
+            <button type="button" class="btn-text" id="btn-drivers-back">Back</button>
+            <div class="actions-right">
+              <button type="button" class="btn btn-primary" id="btn-calculate">Calculate my business value</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Results -->
+      <section id="view-results" class="view" data-view="results">
+        <div class="panel">
+          <div id="methodology-banner" class="banner-notice" role="status"></div>
+
+          <div class="results-hero">
+            <p class="sub" style="margin:0 0 0.25rem">Estimated valuation range</p>
+            <p class="range" id="res-range"></p>
+            <p class="sub" id="res-business-line"></p>
+          </div>
+
+          <div class="stat-grid" id="res-stats"></div>
+
+          <div class="score-ring-wrap">
+            <div class="score-num" id="res-score"></div>
+            <div class="score-copy">
+              <div class="band" id="res-band"></div>
+              <p id="res-band-desc"></p>
+            </div>
+          </div>
+
+          <div class="grid" style="gap:1.5rem">
+            <div class="factor-list">
+              <h3>Strengths</h3>
+              <div id="res-good"></div>
+            </div>
+            <div class="factor-list">
+              <h3>Opportunities</h3>
+              <div id="res-bad"></div>
+            </div>
+          </div>
+
+          <div class="trajectory" id="res-trajectory">
+            <h3>After key improvements</h3>
+            <p id="res-traj-copy"></p>
+            <ul id="res-traj-factors" style="margin:0.5rem 0 0;padding-left:1.1rem;color:var(--muted);font-size:0.92rem"></ul>
+          </div>
+
+          <div class="actions" style="border-top:none;padding-top:0.5rem">
+            <button type="button" class="btn-text" id="btn-results-edit">Edit inputs</button>
+            <div class="actions-right">
+              <button type="button" class="btn btn-primary" id="btn-results-quiz">See my improvement plan</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quiz -->
+      <section id="view-quiz" class="view" data-view="quiz">
+        <div class="panel">
+          <h2>Almost there</h2>
+          <p class="lede">Share your email and a few details so we can send your snapshot and follow up thoughtfully.</p>
+
+          <label class="field">
+            <span class="label">Work email</span>
+            <input type="email" id="lead_email" name="lead_email" autocomplete="email" required>
+            <span class="field-error" id="err-lead_email"></span>
+          </label>
+
+          <label class="field" style="margin-top:1rem">
+            <span class="label">What is your timeline?</span>
+            <select id="quiz_timeline" name="quiz_timeline" required>
+              <option value="">Select…</option>
+              <option>Exploring (12+ months)</option>
+              <option>Planning (6–12 months)</option>
+              <option>Active (0–6 months)</option>
+              <option>Just curious</option>
+            </select>
+            <span class="field-error" id="err-quiz_timeline"></span>
+          </label>
+
+          <label class="field" style="margin-top:1rem">
+            <span class="label">How did you hear about EdgeFour?</span>
+            <select id="quiz_advisory_source" name="quiz_advisory_source" required>
+              <option value="">Select…</option>
+              <option>Referral</option>
+              <option>Search</option>
+              <option>LinkedIn</option>
+              <option>Event / podcast</option>
+              <option>Other</option>
+            </select>
+            <span class="field-error" id="err-quiz_advisory_source"></span>
+          </label>
+
+          <p class="hint" style="margin-top:1rem">By continuing you agree to receive valuation-related email from Edge Four LLC. You can unsubscribe anytime.</p>
+
+          <div class="actions">
+            <button type="button" class="btn-text" id="btn-quiz-back">Back</button>
+            <div class="actions-right">
+              <button type="button" class="btn btn-primary" id="btn-quiz-submit">Email my plan &amp; continue</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Snapshot -->
+      <section id="view-snapshot" class="view" data-view="snapshot">
+        <div class="panel">
+          <h2>Your improvement snapshot</h2>
+          <p class="lede" id="snap-lede"></p>
+
+          <div class="vip-grid" id="snap-vip"></div>
+
+          <div class="trajectory" style="margin-top:1.5rem;background:var(--teal-soft);border-color:#99d5c8">
+            <h3 style="margin-top:0">Trajectory at a glance</h3>
+            <p id="snap-traj" style="margin:0;color:var(--muted)"></p>
+          </div>
+
+          <div class="cta-calendly">
+            <p>Want a partner to pressure-test this and plan your next move?</p>
+            <a class="btn-cta" id="snap-calendly" href="https://calendly.com/edgefour" target="_blank" rel="noopener">Book a call with EdgeFour</a>
+          </div>
+
+          <div class="actions" style="border-top:none;margin-top:1.5rem;padding-top:0">
+            <button type="button" class="btn-text" id="btn-restart">Start over</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>© Edge Four LLC · <a href="https://edgefourllc.com" target="_blank" rel="noopener">edgefourllc.com</a> · <a href="mailto:info@edgefourllc.com">info@edgefourllc.com</a></p>
+    </footer>
+  </div>
+
+  <div id="methodology-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
+    <div class="modal">
+      <h3 id="modal-title">Industry note</h3>
+      <p id="modal-body"></p>
+      <div class="actions" style="border:none;margin-top:1rem;padding:0;justify-content:flex-end">
+        <button type="button" class="btn btn-primary" id="modal-dismiss">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/js/ui.js"></script>
 </body>
 </html>
