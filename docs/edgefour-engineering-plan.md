@@ -1,6 +1,6 @@
 # EdgeFour Value — Engineering Plan
 
-**Purpose:** Migrate the existing single-file HTML valuation tool to a proper backend architecture with Supabase, Netlify Functions, audit tracking, email integration, and Calendly booking attribution.
+**Purpose:** Migrate the existing single-file HTML valuation tool to a proper backend architecture with Supabase, Vercel Serverless Functions, audit tracking, email integration, and Calendly booking attribution.
 
 **Audience:** Coding agent or engineer implementing the rebuild.
 
@@ -19,13 +19,13 @@ The existing implementation is a single `edgefour-value.html` file with all logi
 ## 2. Stack
 
 - **Frontend:** Plain HTML + ES modules (no build step, no framework)
-- **Backend:** Netlify Functions written in TypeScript
+- **Backend:** Vercel Serverless Functions written in TypeScript
 - **Database:** Supabase (PostgreSQL)
 - **Email:** Resend (domain `edgefourllc.com` already DNS-verified)
 - **Booking:** Calendly (existing account at `calendly.com/edgefour`)
-- **Local runtime:** Bun (dev server mimics Netlify Functions)
-- **CI/CD:** GitHub Actions → Netlify CLI deploy
-- **Hosting:** Netlify free tier (custom domain TBD — not yet purchased)
+- **Local runtime:** Vercel CLI (`vercel dev`)
+- **CI/CD:** Vercel GitHub integration (auto-deploy on push)
+- **Hosting:** Vercel free tier (custom domain TBD — not yet purchased)
 
 ---
 
@@ -96,34 +96,29 @@ User books via Calendly CTA
 
 ```
 /
-├── .github/
-│   └── workflows/
-│       └── deploy.yml
 ├── public/
 │   └── index.html
 ├── js/
-│   ├── api.js              # fetch calls to Netlify functions
+│   ├── api.js              # fetch calls to Vercel functions
 │   └── ui.js               # form state, step nav, rendering, event handlers
 ├── shared/
 │   └── types.ts            # shared TS types used by both frontend and backend
-├── netlify/
-│   └── functions/
-│       ├── _lib/
-│       │   ├── cors.ts     # CORS helper with environment-aware allowlist
-│       │   ├── db.ts       # Supabase client + logError() helper
-│       │   ├── validate.ts # input bounds + email format validation
-│       │   └── resend.ts   # Resend client wrapper
-│       ├── save-session.ts
-│       ├── save-step1.ts
-│       ├── save-valuation.ts
-│       ├── calculate.ts
-│       ├── submit-quiz.ts
-│       ├── send-email.ts
-│       ├── track-event.ts
-│       ├── resend-webhook.ts
-│       └── calendly-webhook.ts
-├── server.ts               # Bun local dev server (NOT deployed)
-├── netlify.toml
+├── api/
+│   ├── _lib/
+│   │   ├── cors.ts         # CORS helper with environment-aware allowlist
+│   │   ├── db.ts           # Supabase client + logError() helper
+│   │   ├── validate.ts     # input bounds + email format validation
+│   │   └── resend.ts       # Resend client wrapper
+│   ├── save-session.ts
+│   ├── save-step1.ts
+│   ├── save-valuation.ts
+│   ├── calculate.ts
+│   ├── submit-quiz.ts
+│   ├── send-email.ts
+│   ├── track-event.ts
+│   ├── resend-webhook.ts
+│   └── calendly-webhook.ts
+├── vercel.json
 ├── package.json
 ├── tsconfig.json
 ├── .env.example
@@ -132,7 +127,8 @@ User books via Calendly CTA
 ```
 
 **Notes:**
-- `server.ts` is local-only. Netlify ignores it. It imports the same handlers that Netlify deploys and routes requests to them locally.
+- Vercel automatically discovers functions in the `api/` directory. Each `.ts` file becomes an endpoint at `/api/<name>`.
+- Files/folders prefixed with `_` (e.g., `api/_lib/`) are not deployed as endpoints — they are shared library code.
 - `shared/types.ts` is imported by both `js/api.js` (via JSDoc type hints or TS-checked JS) and backend functions. Keeps the calc result shape in sync.
 - Frontend uses plain JS with ES modules — no build step. If type safety on the frontend becomes desirable later, migrate to Vite + TS without changing the function architecture.
 
@@ -346,7 +342,7 @@ REVOKE ALL ON ALL TABLES IN SCHEMA public FROM anon;
 REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM anon;
 ```
 
-All database access happens via Netlify Functions using the `service_role` key, which bypasses RLS. The anon key is never shipped to the client.
+All database access happens via Vercel Serverless Functions using the `service_role` key, which bypasses RLS. The anon key is never shipped to the client.
 
 ### 6.2 RLS Policies
 
@@ -398,7 +394,7 @@ Validate `lead_email` against a standard regex before attempting the Resend call
 Every function returns CORS headers via the `_lib/cors.ts` helper. Allowlist is environment-aware:
 
 - **Local dev:** `http://localhost:8888`
-- **Production:** the deployed domain (initially `https://edgefourvaluation.netlify.app`, later the purchased custom domain)
+- **Production:** the deployed domain (initially the Vercel-assigned `.vercel.app` URL, later the purchased custom domain)
 
 Set the production origin via an environment variable (`ALLOWED_ORIGIN`) so it can be updated without code changes when the custom domain is ready.
 
@@ -406,10 +402,12 @@ Set the production origin via an environment variable (`ALLOWED_ORIGIN`) so it c
 
 ## 7. Functions
 
-Each function has the standard Netlify handler signature:
+Each function uses the standard Vercel serverless handler signature:
 
 ```typescript
-export const handler = async (event: HandlerEvent): Promise<HandlerResponse> => { ... }
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+
+export default function handler(req: VercelRequest, res: VercelResponse) { ... }
 ```
 
 All functions:
@@ -483,7 +481,7 @@ This function does **not** write to the database. `save-valuation.ts` handles th
 
 **Response:** `{ ok: true }` — frontend proceeds to Snapshot regardless of email outcome.
 
-**Timeout note:** Netlify free tier has a 10-second function timeout. The sequence PATCH → Resend → PATCH must complete within that. If Resend is degraded, the function may time out. Accepted risk on free tier.
+**Timeout note:** Vercel Hobby tier has a 10-second function timeout. The sequence PATCH → Resend → PATCH must complete within that. If Resend is degraded, the function may time out. Accepted risk on free tier.
 
 ### 7.6 `send-email.ts`
 
@@ -654,21 +652,21 @@ export type FurthestStep =
 
 ### 9.1 `server.ts`
 
-Bun server that imports function handlers and routes requests. Approximate shape:
+Bun server that imports Vercel-style function handlers and routes requests locally. The handlers use the same `(req: VercelRequest, res: VercelResponse)` signature as production — the dev server wraps Bun's native `Request` into the shapes the handlers expect. Approximate shape:
 
 ```typescript
-import { handler as calculate } from './netlify/functions/calculate'
-import { handler as saveStep1 } from './netlify/functions/save-step1'
+import calculate from './api/calculate'
+import saveStep1 from './api/save-step1'
 // ... import all handlers
 
 const routes: Record<string, any> = {
-  '/.netlify/functions/calculate': calculate,
-  '/.netlify/functions/save-step1': saveStep1,
+  '/api/calculate': calculate,
+  '/api/save-step1': saveStep1,
   // ... all routes
 }
 
 Bun.serve({
-  port: 8888,
+  port: 3000,
   async fetch(req) {
     const url = new URL(req.url)
 
@@ -676,28 +674,18 @@ Bun.serve({
     if (req.method === 'OPTIONS') {
       return new Response(null, {
         headers: {
-          'Access-Control-Allow-Origin': 'http://localhost:8888',
+          'Access-Control-Allow-Origin': 'http://localhost:3000',
           'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type',
         },
       })
     }
 
-    // Route to function
-    const handler = routes[url.pathname]
-    if (handler) {
-      const body = await req.text()
-      const event = {
-        body,
-        httpMethod: req.method,
-        headers: Object.fromEntries(req.headers),
-        queryStringParameters: Object.fromEntries(url.searchParams),
-      }
-      const result = await handler(event)
-      return new Response(result.body, {
-        status: result.statusCode,
-        headers: { 'Content-Type': 'application/json', ...(result.headers ?? {}) },
-      })
+    // Route to function handler
+    const fn = routes[url.pathname]
+    if (fn) {
+      // Adapt Bun Request → VercelRequest/VercelResponse shim
+      // (implementation details omitted — see server.ts)
     }
 
     // Static file serving from public/ and js/
@@ -712,17 +700,17 @@ Bun.serve({
   },
 })
 
-console.log('Dev server at http://localhost:8888')
+console.log('Dev server at http://localhost:3000')
 ```
 
-**Critical:** `server.ts` is never deployed to Netlify. It exists only for local dev. Netlify reads `netlify.toml`, finds `netlify/functions/`, and bundles each `.ts` file independently.
+**Critical:** `server.ts` is never deployed to Vercel. It exists only for local dev. Vercel discovers functions from the `api/` directory automatically.
 
 ### 9.2 Dev Commands
 
 ```bash
 bun install
 cp .env.example .env   # fill in keys
-bun dev                # server at localhost:8888
+bun dev                # server at localhost:3000
 bun run typecheck      # tsc --noEmit
 ```
 
@@ -744,10 +732,10 @@ RESEND_WEBHOOK_SECRET=
 CALENDLY_WEBHOOK_SECRET=
 
 # CORS
-ALLOWED_ORIGIN=http://localhost:8888
+ALLOWED_ORIGIN=http://localhost:3000
 ```
 
-Production values live in Netlify dashboard → Site settings → Environment variables.
+Production values live in Vercel dashboard → Project Settings → Environment Variables.
 
 ---
 
@@ -759,28 +747,27 @@ Production values live in Netlify dashboard → Site settings → Environment va
 - Feature branches → PR → merge to `main` → auto-deploy
 - Git tags for meaningful releases: `v1.0.0`, `v1.1.0`, etc.
 
-### 10.2 `netlify.toml`
+### 10.2 `vercel.json`
 
-```toml
-[build]
-  functions = "netlify/functions"
-  publish = "public"
-
-[functions]
-  node_bundler = "esbuild"
-
-[[redirects]]
-  from = "/js/*"
-  to = "/js/:splat"
-  status = 200
+```json
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": null,
+  "outputDirectory": "public",
+  "functions": {
+    "api/**/*.ts": {
+      "runtime": "@vercel/node@latest"
+    }
+  }
+}
 ```
 
-The redirect ensures `js/` is served alongside `public/`. Alternative: copy `js/` into `public/js/` during a build step. Simpler option is to put `js/` inside `public/` from the start — update the repo structure accordingly.
+Vercel automatically serves static files from `public/` and discovers serverless functions in `api/`.
 
 ### 10.3 `.github/workflows/deploy.yml`
 
 ```yaml
-name: Deploy to Netlify
+name: Deploy to Vercel
 
 on:
   push:
@@ -801,26 +788,31 @@ jobs:
       - name: Typecheck
         run: bun run typecheck
 
-      - name: Deploy to Netlify
-        uses: netlify/actions/cli@master
-        with:
-          args: deploy --prod --dir=public --functions=netlify/functions
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+      - name: Install Vercel CLI
+        run: bun add -g vercel
+
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
 ```
 
 ### 10.4 Required GitHub Secrets
 
-- `NETLIFY_AUTH_TOKEN` — from Netlify user settings → Personal access tokens
-- `NETLIFY_SITE_ID` — from Netlify site settings → Site details → Site ID
+- `VERCEL_TOKEN` — from Vercel dashboard → Settings → Tokens
+- `VERCEL_ORG_ID` — from `.vercel/project.json` after `vercel link` (stored in repo's Vercel project config)
+- `VERCEL_PROJECT_ID` — from `.vercel/project.json` after `vercel link`
 
 ### 10.5 `.gitignore`
 
 ```
 node_modules/
 .env
-.netlify/
+.vercel/
 dist/
 ```
 
@@ -840,7 +832,7 @@ All Supabase direct calls, calculation logic, and industry multiples are **remov
 
 ### 11.2 `js/api.js`
 
-Thin wrapper around fetch calls to Netlify functions. Handles base URL, JSON serialization, error handling. Exposes one function per endpoint:
+Thin wrapper around fetch calls to Vercel functions. Handles base URL, JSON serialization, error handling. Exposes one function per endpoint:
 
 ```javascript
 export async function saveSession(data) { ... }
@@ -873,7 +865,7 @@ Rough order of operations for the implementation:
 
 1. **Repo scaffold**
    - Create folder structure
-   - `package.json`, `tsconfig.json`, `netlify.toml`, `.env.example`, `.gitignore`
+   - `package.json`, `tsconfig.json`, `vercel.json`, `.env.example`, `.gitignore`
    - Stub all function files with empty handlers
    - Set up `server.ts`
 
@@ -914,14 +906,14 @@ Rough order of operations for the implementation:
    - Render from `CalculateResult` instead of local calc
 
 9. **Deploy**
-   - Set Netlify env vars
+   - Set Vercel env vars
    - Push to `main`, verify GHA deploy
    - End-to-end test: full flow from landing → calendly booking
    - Verify all 6 tables receive expected data
    - Verify email sends and tracks delivery/open events
 
 10. **Custom domain** (when purchased)
-    - Point DNS to Netlify
+    - Point DNS to Vercel
     - Update `ALLOWED_ORIGIN` env var
     - Update CORS allowlist if hardcoded anywhere
     - Update Resend `from` address if moving to domain-specific subdomain
@@ -937,7 +929,7 @@ The `README.md` should cover:
 - How to rotate secrets (Supabase service role, Resend API key, webhook secrets)
 - How to restore from Supabase backup (7-day retention on free tier)
 - Supabase free tier gotcha: project pauses after 1 week of inactivity
-- Links to service dashboards (Supabase, Netlify, Resend, Calendly)
+- Links to service dashboards (Supabase, Vercel, Resend, Calendly)
 
 ---
 
@@ -946,10 +938,10 @@ The `README.md` should cover:
 These are tradeoffs accepted as part of the free-tier scope:
 
 - **No rate limiting on functions** — free tier lacks this; mitigated by input validation and bounds
-- **10-second function timeout** — `submit-quiz` could time out if Resend is degraded; accepted
+- **10-second function timeout (Vercel Hobby)** — `submit-quiz` could time out if Resend is degraded; accepted
 - **Supabase pauses after 1 week idle** — first user after a quiet week hits cold start
 - **No staging environment** — single `main` branch deploys straight to production
-- **No observability tooling beyond Netlify logs + `function_errors`**
+- **No observability tooling beyond Vercel logs + `function_errors`**
 - **Session linking breaks across tabs** — two tabs = two `session_id`s, no user identity to reconcile
 - **No admin dashboard** — leads are viewed via Supabase dashboard directly
 
