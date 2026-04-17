@@ -2,9 +2,9 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": null,
   "outputDirectory": "public",
-  "functions": {
-    "api/**/*.ts": {
-      "runtime": "@vercel/node@latest"
+  "git": {
+    "deploymentEnabled": {
+      "main": true
     }
   }
 }
