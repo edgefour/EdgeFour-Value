@@ -3,914 +3,470 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EdgeFour Value — Business Valuation</title>
+  <title>EdgeFour Value — Business Valuation Tool</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #f6f3ec;
-      --bg-elevated: #ffffff;
-      --ink: #121826;
-      --muted: #4a5568;
-      --muted2: #6b7280;
-      --border: #e2ddd4;
-      --border-strong: #c9c2b4;
-      --navy: #0f1f3a;
-      --navy-hover: #162a4d;
-      --accent: #b45309;
-      --accent-soft: #fff7ed;
-      --teal: #0d5c4d;
-      --teal-soft: #e6f5f2;
-      --danger: #b91c1c;
-      --radius: 12px;
-      --radius-lg: 20px;
-      --shadow: 0 1px 2px rgba(15, 31, 58, 0.06), 0 8px 24px rgba(15, 31, 58, 0.08);
-      --font-sans: "Source Sans 3", system-ui, -apple-system, sans-serif;
-      --font-display: "Fraunces", Georgia, serif;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: var(--font-sans);
-      font-size: 1rem;
-      line-height: 1.55;
-      color: var(--ink);
-      background: var(--bg);
-      min-height: 100vh;
-    }
-
-    .skip-link {
-      position: absolute;
-      left: -9999px;
-      z-index: 999;
-      padding: 0.75rem 1rem;
-      background: var(--navy);
-      color: #fff;
-    }
-    .skip-link:focus { left: 0; top: 0; }
-
-    .shell {
-      max-width: 880px;
-      margin: 0 auto;
-      padding: 1.25rem 1.25rem 3rem;
-    }
-
-    @media (min-width: 640px) {
-      .shell { padding: 2rem 1.5rem 4rem; }
-    }
-
-    .masthead {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 1rem;
-      margin-bottom: 1.75rem;
-      padding-bottom: 1.25rem;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .brand {
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-    }
-
-    .brand-mark {
-      font-family: var(--font-display);
-      font-weight: 700;
-      font-size: 1.35rem;
-      letter-spacing: -0.02em;
-      color: var(--navy);
-    }
-
-    .brand-tag {
-      font-size: 0.9rem;
-      color: var(--muted);
-      max-width: 28rem;
-    }
-
-    .btn-text {
-      font: inherit;
-      font-weight: 600;
-      color: var(--muted);
-      background: none;
-      border: none;
-      cursor: pointer;
-      text-decoration: underline;
-      text-underline-offset: 3px;
-    }
-    .btn-text:hover { color: var(--navy); }
-
-    .stepper {
-      display: flex;
-      align-items: center;
-      gap: 0.35rem;
-      font-size: 0.8rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--muted2);
-    }
-
-    .stepper[data-phase="form"] .step-dot[data-step="1"],
-    .stepper[data-phase="form"] .step-dot[data-step="2"],
-    .stepper[data-phase="form"] .step-dot[data-step="3"] { opacity: 1; }
-
-    .step-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: var(--border-strong);
-      opacity: 0.45;
-    }
-    .step-dot.is-active {
-      background: var(--teal);
-      opacity: 1;
-      box-shadow: 0 0 0 3px var(--teal-soft);
-    }
-
-    .panel {
-      background: var(--bg-elevated);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border);
-      padding: 1.5rem;
-    }
-
-    @media (min-width: 640px) {
-      .panel { padding: 2rem 2.25rem; }
-    }
-
-    .panel h2 {
-      font-family: var(--font-display);
-      font-weight: 600;
-      font-size: 1.5rem;
-      margin: 0 0 0.35rem;
-      letter-spacing: -0.02em;
-    }
-
-    .panel .lede {
-      margin: 0 0 1.5rem;
-      color: var(--muted);
-      font-size: 1.02rem;
-    }
-
-    .grid {
-      display: grid;
-      gap: 1rem;
-    }
-
-    @media (min-width: 560px) {
-      .grid-2 { grid-template-columns: 1fr 1fr; }
-    }
-
-    label.field {
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-    }
-
-    label.field span.label {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--ink);
-    }
-
-    .hint {
-      font-size: 0.8rem;
-      color: var(--muted2);
-      font-weight: 400;
-    }
-
-    input[type="text"],
-    input[type="email"],
-    input[type="number"],
-    select,
-    textarea {
-      font: inherit;
-      padding: 0.65rem 0.75rem;
-      border-radius: var(--radius);
-      border: 1px solid var(--border-strong);
-      background: #fff;
-      color: var(--ink);
-      width: 100%;
-    }
-
-    input:focus, select:focus, textarea:focus {
-      outline: 2px solid var(--teal);
-      outline-offset: 1px;
-      border-color: var(--teal);
-    }
-
-    .field-error {
-      font-size: 0.8rem;
-      color: var(--danger);
-      min-height: 1.1em;
-    }
-
-    .mode-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .mode-option {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.5rem;
-      padding: 0.75rem 1rem;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      cursor: pointer;
-      flex: 1;
-      min-width: 200px;
-      background: #fafafa;
-    }
-
-    .mode-option:has(input:checked) {
-      border-color: var(--teal);
-      background: var(--teal-soft);
-    }
-
-    .mode-option input { margin-top: 0.2rem; }
-
-    .mode-option strong { display: block; font-size: 0.95rem; }
-    .mode-option span { font-size: 0.85rem; color: var(--muted); }
-
-    .slider-block {
-      padding: 0.75rem 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .slider-block:last-child { border-bottom: none; }
-
-    .slider-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 0.75rem;
-      margin-bottom: 0.35rem;
-    }
-
-    .slider-head .name { font-weight: 600; font-size: 0.95rem; }
-    .slider-head .val {
-      font-variant-numeric: tabular-nums;
-      font-weight: 700;
-      color: var(--teal);
-      font-size: 0.9rem;
-    }
-
-    .slider-scale {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.7rem;
-      color: var(--muted2);
-      margin-top: 0.25rem;
-    }
-
-    input[type="range"] {
-      width: 100%;
-      accent-color: var(--teal);
-      height: 6px;
-    }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      margin-top: 1.75rem;
-      padding-top: 1.25rem;
-      border-top: 1px solid var(--border);
-    }
-
-    .actions-right { display: flex; gap: 0.75rem; flex-wrap: wrap; }
-
-    .btn {
-      font: inherit;
-      font-weight: 600;
-      padding: 0.7rem 1.35rem;
-      border-radius: var(--radius);
-      border: none;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      transition: background 0.15s, transform 0.05s;
-    }
-
-    .btn:active { transform: translateY(1px); }
-
-    .btn-primary {
-      background: var(--navy);
-      color: #fff;
-    }
-    .btn-primary:hover { background: var(--navy-hover); }
-
-    .btn-secondary {
-      background: #fff;
-      color: var(--navy);
-      border: 1px solid var(--border-strong);
-    }
-    .btn-secondary:hover { background: #fafafa; }
-
-    .btn:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-    }
-
-    .view { display: none; }
-    .view.is-visible { display: block; }
-
-    .results-hero {
-      text-align: center;
-      padding: 0.5rem 0 1.25rem;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 1.5rem;
-    }
-
-    .results-hero .range {
-      font-family: var(--font-display);
-      font-size: clamp(1.75rem, 5vw, 2.35rem);
-      font-weight: 700;
-      color: var(--navy);
-      letter-spacing: -0.03em;
-    }
-
-    .results-hero .sub {
-      margin-top: 0.35rem;
-      color: var(--muted);
-      font-size: 0.95rem;
-    }
-
-    .stat-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0.75rem;
-      margin-bottom: 1.5rem;
-    }
-
-    @media (min-width: 520px) {
-      .stat-grid { grid-template-columns: repeat(4, 1fr); }
-    }
-
-    .stat {
-      background: #faf9f6;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 0.75rem 0.85rem;
-    }
-
-    .stat .k { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted2); font-weight: 600; }
-    .stat .v { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 1.05rem; margin-top: 0.2rem; }
-
-    .score-ring-wrap {
-      display: flex;
-      align-items: center;
-      gap: 1.25rem;
-      padding: 1rem;
-      background: linear-gradient(135deg, var(--teal-soft), #fff);
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      margin-bottom: 1.5rem;
-    }
-
-    .score-num {
-      font-family: var(--font-display);
-      font-size: 2.75rem;
-      font-weight: 700;
-      line-height: 1;
-      color: var(--teal);
-      min-width: 4.5rem;
-      text-align: center;
-    }
-
-    .score-copy .band { font-weight: 700; font-size: 1.05rem; }
-    .score-copy p { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.95rem; }
-
-    .factor-list h3 {
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--muted2);
-      margin: 0 0 0.65rem;
-    }
-
-    .factor-card {
-      padding: 0.75rem 0.9rem;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      margin-bottom: 0.5rem;
-      background: #fff;
-    }
-
-    .factor-card.good { border-left: 4px solid var(--teal); }
-    .factor-card.bad { border-left: 4px solid var(--accent); }
-
-    .factor-card .t { font-weight: 600; }
-    .factor-card .m { font-size: 0.85rem; color: var(--muted2); }
-    .factor-card p { margin: 0.35rem 0 0; font-size: 0.92rem; color: var(--muted); }
-
-    .trajectory {
-      margin-top: 1.25rem;
-      padding: 1.25rem;
-      border-radius: var(--radius);
-      background: var(--accent-soft);
-      border: 1px solid #fed7aa;
-    }
-
-    .trajectory h3 {
-      font-family: var(--font-display);
-      font-size: 1.15rem;
-      margin: 0 0 0.5rem;
-    }
-
-    .trajectory .new-range {
-      font-weight: 700;
-      font-variant-numeric: tabular-nums;
-      color: var(--accent);
-      font-size: 1.1rem;
-    }
-
-    .vip-grid {
-      display: grid;
-      gap: 0.75rem;
-    }
-
-    @media (min-width: 640px) {
-      .vip-grid { grid-template-columns: repeat(3, 1fr); }
-    }
-
-    .vip-card {
-      padding: 1rem;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: #fff;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .vip-card h4 {
-      font-size: 0.95rem;
-      margin: 0;
-      font-weight: 700;
-      color: var(--navy);
-    }
-
-    .vip-card p { margin: 0; font-size: 0.88rem; color: var(--muted); }
-
-    .banner-notice {
-      display: none;
-      margin-bottom: 1rem;
-      padding: 0.85rem 1rem;
-      border-radius: var(--radius);
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
-      font-size: 0.92rem;
-      color: #1e3a8a;
-    }
-    .banner-notice.is-visible { display: block; }
-
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 31, 58, 0.45);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem;
-      z-index: 100;
-    }
-    .modal-overlay.is-open { display: flex; }
-
-    .modal {
-      background: #fff;
-      border-radius: var(--radius-lg);
-      max-width: 520px;
-      width: 100%;
-      max-height: 90vh;
-      overflow: auto;
-      padding: 1.5rem;
-      box-shadow: var(--shadow);
-    }
-
-    .modal h3 { margin-top: 0; font-family: var(--font-display); }
-
-    .cta-calendly {
-      margin-top: 1.5rem;
-      padding: 1.25rem;
-      border-radius: var(--radius);
-      background: var(--navy);
-      color: #fff;
-      text-align: center;
-    }
-
-    .cta-calendly p { margin: 0 0 1rem; opacity: 0.92; font-size: 0.95rem; }
-
-    .btn-cta {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0.85rem 1.5rem;
-      background: #fff;
-      color: var(--navy);
-      font-weight: 700;
-      border-radius: var(--radius);
-      text-decoration: none;
-      font-size: 1rem;
-    }
-    .btn-cta:hover { background: #f0f4ff; }
-
-    .loading-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(246, 243, 236, 0.75);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 200;
-    }
-    .loading-overlay.is-open { display: flex; }
-
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid var(--border);
-      border-top-color: var(--navy);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    footer.site-footer {
-      margin-top: 2.5rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid var(--border);
-      font-size: 0.85rem;
-      color: var(--muted2);
-      text-align: center;
-    }
-
-    footer.site-footer a { color: var(--teal); }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/edgefour-brand.css">
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
+<a class="skip-link" href="#main">Skip to content</a>
 
-  <div id="loading" class="loading-overlay" aria-hidden="true">
-    <div class="spinner" role="status" aria-label="Loading"></div>
+<div id="loading" class="loading-overlay" aria-hidden="true">
+  <div class="loading-spinner" role="status" aria-label="Loading"></div>
+</div>
+
+<div id="progress-container">
+  <button type="button" id="progress-back-btn" title="Go back">‹</button>
+  <div class="progress-logo">Edge<span>Four</span></div>
+  <div class="progress-track">
+    <div class="progress-fill" id="progress-fill" style="width:0%"></div>
   </div>
+  <div class="progress-label" id="progress-label">Step 1 of 3</div>
+</div>
 
-  <div class="shell">
-    <header class="masthead">
-      <div class="brand">
-        <span class="brand-mark">EdgeFour Value</span>
-        <p class="brand-tag">Estimate your business value, see what drives it, and get a concise improvement plan—built for owners planning what’s next.</p>
+<main id="main">
+<!-- SECTION 1: LANDING -->
+<div class="section active" id="section-landing">
+  <div class="landing-grid-bg"></div>
+  <div class="landing-glow"></div>
+  <div class="landing-glow-2"></div>
+  <div class="landing-inner">
+    <div class="landing-badge">
+      <div class="landing-badge-dot"></div>
+      <span>Free Business Valuation</span>
+    </div>
+
+    <h1 class="landing-h1">Discover What Your<br>Business Is <em>Worth</em></h1>
+    <p class="landing-sub">Many business owners have no idea what their business is actually worth — or what is quietly holding that number back. If the day ever comes to sell, it very well may be the biggest financial transaction of your life. Many owners arrive at that moment completely unprepared. This tool changes that.</p>
+
+    <button type="button" class="cta-primary" id="btn-landing-start">
+      Start My Free Valuation
+      <span class="cta-arrow">→</span>
+    </button>
+    <p class="landing-revenue-note">(This tool is best suited for businesses with revenue of $1M – $30M)</p>
+
+    <div class="landing-stats">
+      <div class="stat-item">
+        <div class="stat-num">5 min</div>
+        <div class="stat-label">To Complete</div>
       </div>
-      <div class="stepper" id="stepper" data-phase="form" aria-hidden="false">
-        <span class="step-dot is-active" data-step="1" title="Business"></span>
-        <span class="step-dot" data-step="2" title="Financials"></span>
-        <span class="step-dot" data-step="3" title="Drivers"></span>
+      <div class="stat-item">
+        <div class="stat-num">100%</div>
+        <div class="stat-label">Free & Confidential</div>
       </div>
-    </header>
-
-    <main id="main">
-      <!-- Form steps -->
-      <section id="view-business" class="view is-visible" data-view="business_info">
-        <div class="panel">
-          <h2>Business profile</h2>
-          <p class="lede">Tell us about the company so we can anchor the valuation in the right context.</p>
-
-          <div class="grid">
-            <label class="field">
-              <span class="label">Business name</span>
-              <input type="text" id="business_name" name="business_name" autocomplete="organization" required>
-              <span class="field-error" id="err-business_name"></span>
-            </label>
-            <label class="field">
-              <span class="label">Industry</span>
-              <select id="industry" name="industry" required>
-                <option value="">Select an industry…</option>
-                <optgroup label="Professional &amp; business services">
-                  <option>Accounting &amp; tax</option>
-                  <option>Business consulting</option>
-                  <option>IT services &amp; managed services</option>
-                  <option>Marketing &amp; advertising</option>
-                  <option>Legal services</option>
-                </optgroup>
-                <optgroup label="Construction &amp; trades">
-                  <option>Commercial construction</option>
-                  <option>Residential construction</option>
-                  <option>Electrical / HVAC / plumbing</option>
-                </optgroup>
-                <optgroup label="Healthcare">
-                  <option>Medical practice</option>
-                  <option>Dental practice</option>
-                  <option>Home health &amp; care</option>
-                </optgroup>
-                <optgroup label="Manufacturing &amp; distribution">
-                  <option>Manufacturing</option>
-                  <option>Wholesale distribution</option>
-                  <option>Logistics &amp; transportation</option>
-                </optgroup>
-                <optgroup label="Consumer &amp; retail">
-                  <option>Retail</option>
-                  <option>Food &amp; beverage</option>
-                  <option>Hospitality</option>
-                </optgroup>
-                <option>Other</option>
-              </select>
-              <span class="field-error" id="err-industry"></span>
-            </label>
-          </div>
-
-          <div class="grid grid-2" style="margin-top:1rem">
-            <label class="field">
-              <span class="label">City</span>
-              <input type="text" id="city" name="city" autocomplete="address-level2" required>
-              <span class="field-error" id="err-city"></span>
-            </label>
-            <label class="field">
-              <span class="label">State</span>
-              <select id="state" name="state" required>
-                <option value="">State…</option>
-              </select>
-              <span class="field-error" id="err-state"></span>
-            </label>
-          </div>
-
-          <div class="grid grid-2" style="margin-top:1rem">
-            <label class="field">
-              <span class="label">Years in business</span>
-              <input type="number" id="years_in_business" name="years_in_business" min="0" max="200" step="1" required>
-              <span class="field-error" id="err-years_in_business"></span>
-            </label>
-            <label class="field">
-              <span class="label">Employees (FTE)</span>
-              <input type="number" id="employees" name="employees" min="0" step="1" required>
-              <span class="field-error" id="err-employees"></span>
-            </label>
-          </div>
-
-          <div class="actions">
-            <span></span>
-            <div class="actions-right">
-              <button type="button" class="btn btn-primary" id="btn-business-next">Continue</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="view-financials" class="view" data-view="financials">
-        <div class="panel">
-          <h2>Financial snapshot</h2>
-          <p class="lede">We use EBITDA-based multiples. Choose how you want to provide earnings.</p>
-
-          <div class="mode-row" role="radiogroup" aria-label="Earnings input mode">
-            <label class="mode-option">
-              <input type="radio" name="input_mode" id="mode_know" value="know" checked>
-              <span>
-                <strong>I know my EBITDA</strong>
-                <span>Fastest path—enter revenue and EBITDA directly.</span>
-              </span>
-            </label>
-            <label class="mode-option">
-              <input type="radio" name="input_mode" id="mode_calc" value="calc">
-              <span>
-                <strong>Calculate from net income</strong>
-                <span>We’ll approximate EBITDA from your P&amp;L lines.</span>
-              </span>
-            </label>
-          </div>
-
-          <div class="grid grid-2">
-            <label class="field">
-              <span class="label">Annual revenue</span>
-              <input type="number" id="revenue" name="revenue" min="0" step="1000" placeholder="e.g. 2500000" required>
-              <span class="field-error" id="err-revenue"></span>
-            </label>
-            <label class="field" id="wrap-ebitda">
-              <span class="label">EBITDA</span>
-              <input type="number" id="ebitda" name="ebitda" step="1000" placeholder="e.g. 450000" required>
-              <span class="field-error" id="err-ebitda"></span>
-            </label>
-          </div>
-
-          <div id="calc-fields" class="grid" style="display:none;margin-top:1rem">
-            <div class="grid grid-2">
-              <label class="field">
-                <span class="label">Net income (earnings)</span>
-                <input type="number" id="earnings" name="earnings" step="1000">
-                <span class="field-error" id="err-earnings"></span>
-              </label>
-              <label class="field">
-                <span class="label">Interest expense</span>
-                <input type="number" id="interest_expense" name="interest_expense" min="0" step="1000">
-                <span class="field-error" id="err-interest_expense"></span>
-              </label>
-            </div>
-            <div class="grid grid-2">
-              <label class="field">
-                <span class="label">Taxes paid</span>
-                <input type="number" id="taxes_paid" name="taxes_paid" min="0" step="1000">
-                <span class="field-error" id="err-taxes_paid"></span>
-              </label>
-              <label class="field">
-                <span class="label">Depreciation &amp; amortization</span>
-                <input type="number" id="depreciation_amort" name="depreciation_amort" min="0" step="1000">
-                <span class="field-error" id="err-depreciation_amort"></span>
-              </label>
-            </div>
-          </div>
-
-          <h3 style="font-size:1rem;margin:1.5rem 0 0.75rem;font-family:var(--font-display)">Owner adjustments</h3>
-          <p class="hint" style="margin:0 0 0.75rem">Normalize compensation and one-time items so buyers see sustainable earnings.</p>
-
-          <div class="grid grid-2">
-            <label class="field">
-              <span class="label">Owner salary / draws taken</span>
-              <input type="number" id="owner_salary" name="owner_salary" min="0" step="1000" value="0" required>
-              <span class="field-error" id="err-owner_salary"></span>
-            </label>
-            <label class="field">
-              <span class="label">Market-rate salary for your role</span>
-              <input type="number" id="market_salary" name="market_salary" min="0" step="1000" value="0" required>
-              <span class="field-error" id="err-market_salary"></span>
-            </label>
-          </div>
-          <label class="field" style="margin-top:1rem">
-            <span class="label">Add-backs <span class="hint">(discretionary expenses, one-time costs)</span></span>
-            <input type="number" id="addbacks" name="addbacks" min="0" step="1000" value="0" required>
-            <span class="field-error" id="err-addbacks"></span>
-          </label>
-
-          <div class="actions">
-            <button type="button" class="btn-text" id="btn-financials-back">Back</button>
-            <div class="actions-right">
-              <button type="button" class="btn btn-primary" id="btn-financials-next">Continue</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="view-drivers" class="view" data-view="value_drivers">
-        <div class="panel">
-          <h2>Value drivers</h2>
-          <p class="lede">Rate each area from 1 (needs work) to 5 (strong). This shapes the multiple applied to your earnings.</p>
-
-          <div id="sliders-root"></div>
-
-          <div class="actions">
-            <button type="button" class="btn-text" id="btn-drivers-back">Back</button>
-            <div class="actions-right">
-              <button type="button" class="btn btn-primary" id="btn-calculate">Calculate my business value</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Results -->
-      <section id="view-results" class="view" data-view="results">
-        <div class="panel">
-          <div id="methodology-banner" class="banner-notice" role="status"></div>
-
-          <div class="results-hero">
-            <p class="sub" style="margin:0 0 0.25rem">Estimated valuation range</p>
-            <p class="range" id="res-range"></p>
-            <p class="sub" id="res-business-line"></p>
-          </div>
-
-          <div class="stat-grid" id="res-stats"></div>
-
-          <div class="score-ring-wrap">
-            <div class="score-num" id="res-score"></div>
-            <div class="score-copy">
-              <div class="band" id="res-band"></div>
-              <p id="res-band-desc"></p>
-            </div>
-          </div>
-
-          <div class="grid" style="gap:1.5rem">
-            <div class="factor-list">
-              <h3>Strengths</h3>
-              <div id="res-good"></div>
-            </div>
-            <div class="factor-list">
-              <h3>Opportunities</h3>
-              <div id="res-bad"></div>
-            </div>
-          </div>
-
-          <div class="trajectory" id="res-trajectory">
-            <h3>After key improvements</h3>
-            <p id="res-traj-copy"></p>
-            <ul id="res-traj-factors" style="margin:0.5rem 0 0;padding-left:1.1rem;color:var(--muted);font-size:0.92rem"></ul>
-          </div>
-
-          <div class="actions" style="border-top:none;padding-top:0.5rem">
-            <button type="button" class="btn-text" id="btn-results-edit">Edit inputs</button>
-            <div class="actions-right">
-              <button type="button" class="btn btn-primary" id="btn-results-quiz">See my improvement plan</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Quiz -->
-      <section id="view-quiz" class="view" data-view="quiz">
-        <div class="panel">
-          <h2>Almost there</h2>
-          <p class="lede">Share your email and a few details so we can send your snapshot and follow up thoughtfully.</p>
-
-          <label class="field">
-            <span class="label">Work email</span>
-            <input type="email" id="lead_email" name="lead_email" autocomplete="email" required>
-            <span class="field-error" id="err-lead_email"></span>
-          </label>
-
-          <label class="field" style="margin-top:1rem">
-            <span class="label">What is your timeline?</span>
-            <select id="quiz_timeline" name="quiz_timeline" required>
-              <option value="">Select…</option>
-              <option>Exploring (12+ months)</option>
-              <option>Planning (6–12 months)</option>
-              <option>Active (0–6 months)</option>
-              <option>Just curious</option>
-            </select>
-            <span class="field-error" id="err-quiz_timeline"></span>
-          </label>
-
-          <label class="field" style="margin-top:1rem">
-            <span class="label">How did you hear about EdgeFour?</span>
-            <select id="quiz_advisory_source" name="quiz_advisory_source" required>
-              <option value="">Select…</option>
-              <option>Referral</option>
-              <option>Search</option>
-              <option>LinkedIn</option>
-              <option>Event / podcast</option>
-              <option>Other</option>
-            </select>
-            <span class="field-error" id="err-quiz_advisory_source"></span>
-          </label>
-
-          <p class="hint" style="margin-top:1rem">By continuing you agree to receive valuation-related email from Edge Four LLC. You can unsubscribe anytime.</p>
-
-          <div class="actions">
-            <button type="button" class="btn-text" id="btn-quiz-back">Back</button>
-            <div class="actions-right">
-              <button type="button" class="btn btn-primary" id="btn-quiz-submit">Email my plan &amp; continue</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Snapshot -->
-      <section id="view-snapshot" class="view" data-view="snapshot">
-        <div class="panel">
-          <h2>Your improvement snapshot</h2>
-          <p class="lede" id="snap-lede"></p>
-
-          <div class="vip-grid" id="snap-vip"></div>
-
-          <div class="trajectory" style="margin-top:1.5rem;background:var(--teal-soft);border-color:#99d5c8">
-            <h3 style="margin-top:0">Trajectory at a glance</h3>
-            <p id="snap-traj" style="margin:0;color:var(--muted)"></p>
-          </div>
-
-          <div class="cta-calendly">
-            <p>Want a partner to pressure-test this and plan your next move?</p>
-            <a class="btn-cta" id="snap-calendly" href="https://calendly.com/edgefour" target="_blank" rel="noopener">Book a call with EdgeFour</a>
-          </div>
-
-          <div class="actions" style="border-top:none;margin-top:1.5rem;padding-top:0">
-            <button type="button" class="btn-text" id="btn-restart">Start over</button>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <footer class="site-footer">
-      <p>© Edge Four LLC · <a href="https://edgefourllc.com" target="_blank" rel="noopener">edgefourllc.com</a> · <a href="mailto:info@edgefourllc.com">info@edgefourllc.com</a></p>
-    </footer>
-  </div>
-
-  <div id="methodology-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
-    <div class="modal">
-      <h3 id="modal-title">Industry note</h3>
-      <p id="modal-body"></p>
-      <div class="actions" style="border:none;margin-top:1rem;padding:0;justify-content:flex-end">
-        <button type="button" class="btn btn-primary" id="modal-dismiss">Got it</button>
+      <div class="stat-item">
+        <div class="stat-num">10</div>
+        <div class="stat-label">Value Factors Analyzed</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">100+</div>
+        <div class="stat-label">Business Types to Select</div>
+      </div>
+    </div>
+    <div class="landing-features">
+      <div class="feature-card">
+        <div class="feature-icon"><svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto 10px;">
+  <rect x="3" y="18" width="6" height="11" rx="1.5" fill="#C9A84C" opacity="0.7"/>
+  <rect x="13" y="11" width="6" height="18" rx="1.5" fill="#C9A84C" opacity="0.9"/>
+  <rect x="23" y="5" width="6" height="24" rx="1.5" fill="#C9A84C"/>
+  <polyline points="6,17 16,10 26,4" stroke="#E8C97A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="26" cy="4" r="2" fill="#E8C97A"/>
+</svg></div>
+        <div class="feature-title">What Your Business Is Worth</div>
+        <div class="feature-desc">See what a buyer would likely pay — not what you assume</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto 10px;">
+  <circle cx="16" cy="16" r="13" stroke="#C9A84C" stroke-width="2" opacity="0.4"/>
+  <circle cx="16" cy="16" r="9" stroke="#C9A84C" stroke-width="1.5" opacity="0.6"/>
+  <path d="M16 3 L29 16 L16 29 L3 16 Z" stroke="#C9A84C" stroke-width="1.5" fill="none" opacity="0.5"/>
+  <circle cx="16" cy="16" r="3.5" fill="#C9A84C"/>
+  <line x1="16" y1="7" x2="16" y2="11" stroke="#E8C97A" stroke-width="2" stroke-linecap="round"/>
+</svg></div>
+        <div class="feature-title">Your Value Score</div>
+        <div class="feature-desc">See exactly which factors are positively or negatively impacting what buyers will pay</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto 10px;">
+  <polyline points="3,26 9,18 13,22 17,13 21,17 28,6" stroke="#C9A84C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <polyline points="22,6 28,6 28,12" stroke="#E8C97A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg></div>
+        <div class="feature-title">Your Improvement Plan</div>
+        <div class="feature-desc">A personalized roadmap showing what to focus on first to make your business more profitable and more valuable</div>
       </div>
     </div>
   </div>
+</div>
+<!-- BUSINESS -->
+<div class="section" id="section-biz-info">
+  <div class="form-section-inner">
+    <div class="form-header">
+      <div class="step-tag">Step 1 of 3 — Business Profile</div>
+      <h2 class="form-h2">Tell us about<br>your business</h2>
+      <p class="form-sub">Basic information helps us benchmark your business against comparable companies in your industry.</p>
+    </div>
+    <div class="form-card">
+      <div class="field-group">
+        <label for="business_name">Business Name</label>
+        <input type="text" id="business_name" name="business_name" placeholder="e.g., Acme Plumbing Services" autocomplete="organization">
+        <span class="error-msg" id="err-business_name"></span>
+      </div>
+      <div class="field-group">
+        <label for="industry">Industry</label>
+        <select id="industry" name="industry">
+          <option value="">Loading industries…</option>
+        </select>
+        <span class="helper">Your industry affects the baseline valuation multiple buyers will apply.</span>
+        <span class="error-msg" id="err-industry"></span>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label for="city">City</label>
+          <input type="text" id="city" name="city" placeholder="e.g., Austin" autocomplete="address-level2">
+          <span class="error-msg" id="err-city"></span>
+        </div>
+        <div class="field-group">
+          <label for="state">State</label>
+          <select id="state" name="state">
+            <option value="">Select state…</option>
+          </select>
+          <span class="error-msg" id="err-state"></span>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label for="years_in_business">Years in Business</label>
+          <input type="number" id="years_in_business" name="years_in_business" placeholder="e.g., 12" min="0" max="200" step="1">
+          <span class="error-msg" id="err-years_in_business"></span>
+        </div>
+        <div class="field-group"></div>
+      </div>
+      <div class="field-group">
+        <label for="employees">Number of Employees (Full-Time)</label>
+        <input type="number" id="employees" name="employees" placeholder="e.g., 18" min="0" step="1">
+        <span class="helper">Aggregate part-time staff into full-time equivalents; do not include contractors. Include owners if active in the business.</span>
+        <span class="error-msg" id="err-employees"></span>
+      </div>
+    </div>
+    <div class="form-nav">
+      <button type="button" class="btn-back" id="btn-biz-back">← Back</button>
+      <button type="button" class="btn-next" id="btn-business-next">Continue <span>→</span></button>
+    </div>
+  </div>
+</div>
 
-  <script type="module" src="/js/ui.js"></script>
+<!-- FINANCIALS -->
+<div class="section" id="section-financials">
+  <div class="form-section-inner">
+    <div class="form-header">
+      <div class="step-tag">Step 2 of 3 — Financial Data</div>
+      <h2 class="form-h2">Your financial<br>picture</h2>
+      <p class="form-sub">These inputs help us estimate your Adjusted EBITDA — the primary driver of your business valuation. Estimates are fine.</p>
+      <p class="form-sub form-sub-sm">EBITDA stands for Earnings Before Interest, Taxes, Depreciation, and Amortization. Adjusted EBITDA is a commonly used proxy for the cash flow available to a buyer.</p>
+    </div>
+    <p class="mode-toggle-label">How would you like to enter your EBITDA?</p>
+    <div class="mode-toggle-row">
+      <button type="button" class="mode-btn active" id="mode-btn-know" data-mode="know">
+        <div class="mode-btn-check"><div class="mode-btn-check-dot"></div></div>
+        <div class="mode-btn-title">I know my EBITDA</div>
+        <div class="mode-btn-desc">Enter your revenue and EBITDA directly</div>
+      </button>
+      <button type="button" class="mode-btn" id="mode-btn-calc" data-mode="calc">
+        <div class="mode-btn-check"><div class="mode-btn-check-dot"></div></div>
+        <div class="mode-btn-title">Help me calculate my EBITDA</div>
+        <div class="mode-btn-desc">Approximate EBITDA from net income and adjustments</div>
+      </button>
+    </div>
+    <input type="hidden" name="input_mode" id="input_mode_field" value="know">
+
+    <div class="form-card" id="mode-know-card">
+      <div class="field-group">
+        <label for="revenue">Annual Revenue</label>
+        <div class="prefix-input">
+          <span class="prefix">$</span>
+          <input type="number" id="revenue" name="revenue" placeholder="e.g., 3500000" min="0" step="1000">
+        </div>
+        <span class="helper">Your total top-line revenue before any expenses.</span>
+        <span class="error-msg" id="err-revenue"></span>
+      </div>
+      <div class="field-group" id="wrap-ebitda">
+        <label for="ebitda">Annual EBITDA</label>
+        <div class="prefix-input">
+          <span class="prefix">$</span>
+          <input type="number" id="ebitda" name="ebitda" placeholder="e.g., 620000" step="1000">
+        </div>
+        <span class="helper">Earnings Before Interest, Taxes, Depreciation, and Amortization.</span>
+        <span class="error-msg" id="err-ebitda"></span>
+      </div>
+    </div>
+
+    <div class="form-card" id="calc-fields" style="display:none;">
+      <div class="field-row">
+        <div class="field-group">
+          <label for="earnings">Net income (earnings)</label>
+          <div class="prefix-input"><span class="prefix">$</span><input type="number" id="earnings" placeholder="e.g., 400000" step="1000"></div>
+          <span class="error-msg" id="err-earnings"></span>
+        </div>
+        <div class="field-group">
+          <label for="interest_expense">Interest expense</label>
+          <div class="prefix-input"><span class="prefix">$</span><input type="number" id="interest_expense" placeholder="0" min="0" step="1000"></div>
+          <span class="error-msg" id="err-interest_expense"></span>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label for="taxes_paid">Taxes paid</label>
+          <div class="prefix-input"><span class="prefix">$</span><input type="number" id="taxes_paid" placeholder="0" min="0" step="1000"></div>
+          <span class="error-msg" id="err-taxes_paid"></span>
+        </div>
+        <div class="field-group">
+          <label for="depreciation_amort">Depreciation &amp; amortization</label>
+          <div class="prefix-input"><span class="prefix">$</span><input type="number" id="depreciation_amort" placeholder="0" min="0" step="1000"></div>
+          <span class="error-msg" id="err-depreciation_amort"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="field-group">
+        <label for="owner_salary">Owner(s) Total Annual Compensation</label>
+        <div class="prefix-input">
+          <span class="prefix">$</span>
+          <input type="number" id="owner_salary" name="owner_salary" placeholder="e.g., 280000" min="0" step="1000" value="0">
+        </div>
+        <span class="helper">W-2 salary, bonuses, and compensation paid through the income statement.</span>
+        <span class="error-msg" id="err-owner_salary"></span>
+      </div>
+      <div class="field-group">
+        <label for="market_salary">Market Rate of Compensation for Owner(s) Role(s)</label>
+        <div class="prefix-input">
+          <span class="prefix">$</span>
+          <input type="number" id="market_salary" name="market_salary" placeholder="e.g., 120000" min="0" step="1000" value="0">
+        </div>
+        <span class="helper">Cost to replace owner’s operating role at market rates.</span>
+        <span class="error-msg" id="err-market_salary"></span>
+      </div>
+      <div class="field-group">
+        <label for="addbacks">Other Adjustments (Add-Backs)</label>
+        <div class="prefix-input">
+          <span class="prefix">$</span>
+          <input type="number" id="addbacks" name="addbacks" placeholder="e.g., 40000" min="0" step="1000" value="0">
+        </div>
+        <span class="helper">Non-recurring or discretionary items not captured above.</span>
+        <span class="error-msg" id="err-addbacks"></span>
+      </div>
+    </div>
+
+    <div class="form-nav">
+      <button type="button" class="btn-back" id="btn-financials-back">← Back</button>
+      <button type="button" class="btn-next" id="btn-financials-next">Continue <span>→</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- VALUE DRIVERS -->
+<div class="section" id="section-value-drivers">
+  <div class="form-section-inner">
+    <div class="form-header">
+      <div class="step-tag">Step 3 of 3 — Value Drivers</div>
+      <h2 class="form-h2">What drives your<br>business value</h2>
+      <p class="form-sub">These qualitative factors can significantly increase or decrease what a buyer is willing to pay.</p>
+    </div>
+    <div id="sliders-root"></div>
+    <div class="form-nav">
+      <button type="button" class="btn-back" id="btn-drivers-back">← Back</button>
+      <button type="button" class="btn-next btn-calculate" id="btn-calculate">Calculate My Valuation ◆</button>
+    </div>
+  </div>
+</div>
+<div class="section" id="section-results">
+  <div class="results-inner">
+    <div class="results-header fade-in">
+      <div class="results-badge"><span>Your Valuation Report</span></div>
+      <h1 class="results-h1" id="results-biz-name">Your Business</h1>
+      <p class="results-subtitle" id="results-subtitle"></p>
+      <p class="results-awareness" id="results-awareness"></p>
+    </div>
+
+    <div class="industry-notice fade-in-delay-1" id="industry-notice" style="display:none;">
+      <div class="industry-notice-eyebrow">⚠ Valuation Methodology Note</div>
+      <div class="industry-notice-title" id="industry-notice-title"></div>
+      <p class="industry-notice-body" id="industry-notice-body"></p>
+    </div>
+
+    <div class="score-card fade-in-delay-1">
+      <div class="score-label">Business Value Score</div>
+      <div class="score-num"><span id="score-num">—</span><span class="score-denom">/100</span></div>
+      <div class="score-desc" id="score-desc"></div>
+    </div>
+
+    <div class="valuation-grid fade-in-delay-2">
+      <div class="val-card">
+        <div class="val-card-label">Conservative Value</div>
+        <div class="val-amount" id="val-low">—</div>
+      </div>
+      <div class="val-card base">
+        <div class="val-card-label">Base Estimated Value</div>
+        <div class="val-amount" id="val-base">—</div>
+      </div>
+      <div class="val-card">
+        <div class="val-card-label">Optimistic Value</div>
+        <div class="val-amount" id="val-high">—</div>
+      </div>
+    </div>
+
+    <div class="metrics-row fade-in-delay-2">
+      <div class="metric-card">
+        <div class="metric-label">Adjusted EBITDA</div>
+        <div class="metric-value" id="adj-ebitda">—</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Estimated EBITDA Multiple</div>
+        <div class="metric-value" id="est-multiple">—</div>
+        <div id="revenue-bonus-line" style="display:none;font-size:11px;color:var(--slate-light);margin-top:6px;line-height:1.5;">
+          <span id="revenue-bonus-amt"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="trajectory-card fade-in-delay-3" id="trajectory-card">
+      <h3>What Your Business Could Be Worth</h3>
+      <p class="traj-context">Most owners are surprised by the gap between the value of their company today and the value it could be after making just 2 key improvements. The good news: business value can be improved significantly with the right focus and enough lead time.</p>
+      <div class="trajectory-row">
+        <div class="traj-col">
+          <div class="traj-label">Today</div>
+          <div class="traj-value" id="traj-today">—</div>
+        </div>
+        <div class="traj-arrow">→</div>
+        <div class="traj-col improved">
+          <div class="traj-label">After Key Improvements</div>
+          <div class="traj-value" id="traj-improved">—</div>
+        </div>
+      </div>
+      <div class="traj-uplift" id="traj-uplift">↑ +$0 potential upside</div>
+      <div class="traj-actions" id="traj-actions"></div>
+    </div>
+
+    <div class="factors-grid fade-in-delay-4">
+      <div class="factors-card good">
+        <h3>✓ What Buyers Will Pay a Premium For</h3>
+        <div id="factors-good"></div>
+      </div>
+      <div class="factors-card bad">
+        <h3>✗ What Buyers Will Discount Value For</h3>
+        <div id="factors-bad"></div>
+      </div>
+    </div>
+
+    <div class="cta-card fade-in-delay-4">
+      <h3>You Now Know More Than Many Business Owners Ever Do.</h3>
+      <p>Many owners operate in a complete information desert when it comes to the value of what they have built. They run their business for decades, and if the day ever comes to sell — which for many is the single largest financial transaction of their lives — they arrive completely unprepared. You just changed that. Answer 3 quick questions to get a personalized roadmap for making the most of what you have built.</p>
+      <button type="button" class="btn-cta-book" id="btn-results-quiz">Show Me How to Increase My Value →</button>
+    </div>
+
+    <button type="button" class="btn-back-section" id="btn-results-back-drivers">← Back to My Inputs</button>
+    <button type="button" class="btn-restart" id="btn-restart-from-results">← Start a New Valuation</button>
+    <div class="disclaimer">This valuation is a preliminary estimate based solely on the information you provided and is for informational purposes only. It does not constitute a formal valuation, appraisal, or opinion of value, and should not be relied upon for any transaction, tax, legal, or financial decision. Actual business value may vary significantly based on additional factors, including but not limited to detailed financial review, market conditions, industry dynamics, and buyer-specific considerations. For a formal valuation or transaction-related advice, you should consult a qualified advisor.</div>
+  </div>
+</div>
+<!-- QUIZ -->
+<div class="section" id="section-vip-quiz">
+  <div class="vip-quiz-inner">
+    <div class="vip-quiz-header fade-in">
+      <div class="vip-unlock-badge"><span>◆ Your Personalized Roadmap</span></div>
+      <h2 class="vip-quiz-h2">Let's Personalize<br>Your Plan</h2>
+      <p class="vip-quiz-sub">Three quick questions help us tailor your improvement plan — takes less than 60 seconds.</p>
+    </div>
+    <div class="quiz-step-track" aria-hidden="true">
+      <div class="quiz-step-pip done"></div>
+      <div class="quiz-step-pip done"></div>
+      <div class="quiz-step-pip active"></div>
+    </div>
+    <div class="form-card" style="margin-top:8px;">
+      <div class="field-group">
+        <label for="lead_email">Work email</label>
+        <input type="email" id="lead_email" name="lead_email" placeholder="e.g., name@company.com" autocomplete="email">
+        <span class="helper">We respect your privacy and will keep all provided information strictly confidential.</span>
+        <span class="error-msg" id="err-lead_email"></span>
+      </div>
+      <div class="field-group">
+        <label for="quiz_timeline">If you were to consider a sale of your business, what is your likely timeframe?</label>
+        <select id="quiz_timeline" name="quiz_timeline">
+          <option value="">Select…</option>
+          <option value="within12">Within 12 months</option>
+          <option value="1to3">1–3 years</option>
+          <option value="3to5">3–5 years</option>
+          <option value="more5">More than 5 years</option>
+          <option value="none">No current thoughts regarding selling</option>
+        </select>
+        <span class="error-msg" id="err-quiz_timeline"></span>
+      </div>
+      <div class="field-group">
+        <label for="quiz_advisory_source">When you need advice on your business, who do you primarily rely on?</label>
+        <select id="quiz_advisory_source" name="quiz_advisory_source">
+          <option value="">Select…</option>
+          <option value="consultant">Business coach or consultant</option>
+          <option value="cpa">Accountant / CPA</option>
+          <option value="attorney">Attorney</option>
+          <option value="peers">Peer group or other business owners</option>
+          <option value="online">Online tools or resources</option>
+          <option value="solo">No regular resource</option>
+          <option value="other">Other</option>
+        </select>
+        <span class="error-msg" id="err-quiz_advisory_source"></span>
+      </div>
+      <p class="form-sub" style="font-size:13px;margin-top:8px;">By continuing you agree to receive valuation-related email from Edge Four LLC. You can unsubscribe anytime.</p>
+    </div>
+    <div class="quiz-nav" style="margin-top:28px;">
+      <button type="button" class="btn-quiz-back" id="btn-quiz-back">← Back</button>
+      <button type="button" class="btn-quiz-next final" id="btn-quiz-submit">See My Improvement Plan ◆</button>
+    </div>
+  </div>
+</div>
+
+<!-- SNAPSHOT -->
+<div class="section" id="section-vip-snapshot">
+  <div class="snapshot-inner">
+    <div class="snapshot-header fade-in">
+      <div class="snapshot-badge"><span>◆ Your Personalized Value Improvement Roadmap</span></div>
+      <h1 class="snapshot-h1">Here Is What to<br>Do <em>Next.</em></h1>
+      <p class="snapshot-sub" id="snap-lede">Based on your valuation and responses, these are the highest-leverage opportunities to increase profitability and business value.</p>
+    </div>
+    <div class="timeline-pill fade-in-delay-1" id="snap-timeline-pill">
+      <span id="snap-timeline-text">Timeline</span>
+    </div>
+
+    <div class="recs-card fade-in-delay-2">
+      <h3>Your Value Improvement Roadmap</h3>
+      <p class="recs-context">These improvements are tailored to your specific business. Each one can meaningfully move both your profitability and your business value.</p>
+      <div id="recommendations"></div>
+    </div>
+
+    <div class="snapshot-detail-card fade-in-delay-3" id="snap-advisor-card">
+      <h4>Trajectory</h4>
+      <p id="snap-traj"></p>
+    </div>
+
+    <div class="snapshot-cta-row fade-in-delay-4">
+      <a class="snapshot-cta-primary" id="snap-calendly" href="https://calendly.com/edgefour" target="_blank" rel="noopener">Schedule a Value Improvement Call with an Edge Four Advisor</a>
+      <p style="font-size:15px;color:var(--slate-light);text-align:center;margin:16px 0 0;width:100%;">Or email <a href="mailto:info@edgefourllc.com" style="color:var(--gold-light);">info@edgefourllc.com</a> · <a href="https://edgefourllc.com" target="_blank" rel="noopener" style="color:var(--gold-light);">edgefourllc.com</a></p>
+    </div>
+
+    <button type="button" class="btn-back-section" id="btn-snapshot-back-results">← Back to My Valuation</button>
+    <button type="button" class="btn-restart" id="btn-restart">← Start a New Valuation</button>
+    <div class="disclaimer">This plan is based on the information you provided and is intended for informational purposes only. It does not constitute financial, legal, or investment advice.</div>
+  </div>
+</div>
+</main>
+
+<div id="methodology-modal" class="methodology-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
+  <div class="methodology-modal">
+    <h3 id="modal-title">Industry note</h3>
+    <p id="modal-body"></p>
+    <button type="button" class="btn-next" id="modal-dismiss">Got it</button>
+  </div>
+</div>
+
+<script type="module" src="/js/ui.js"></script>
 </body>
 </html>

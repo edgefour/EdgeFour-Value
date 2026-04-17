@@ -1,5 +1,5 @@
 /**
- * EdgeFour Value — client UI (steps, validation, rendering).
+ * EdgeFour Value — client UI (matches original edgefour-value layout).
  */
 
 import {
@@ -32,40 +32,128 @@ const US_STATES = [
   ["WV", "West Virginia"], ["WI", "Wisconsin"], ["WY", "Wyoming"],
 ];
 
-const SLIDER_META = [
-  { key: "growth", label: "Revenue growth & market position" },
-  { key: "owner_dep", label: "Owner dependency & team depth" },
-  { key: "recurring", label: "Recurring / predictable revenue" },
-  { key: "cust_conc", label: "Customer concentration" },
-  { key: "systems", label: "Systems, processes & documentation" },
-  { key: "fin_records", label: "Financial records quality" },
+const GROWTH_LABELS = [
+  "Declining (< 0%)",
+  "Flat (0–2%)",
+  "Stable (2–5%)",
+  "Growing (5–15%)",
+  "Hypergrowth (15%+)",
+];
+const OWNER_DEP_LABELS = [
+  "Just owner(s); difficult to leave",
+  "Owner(s) rarely away, but 1–2 senior staff",
+  "Some management leadership, but owner(s) make most decisions",
+  "Experienced team; key staff lead",
+  "Strong non-owner leadership; business runs without owner(s)",
+];
+const RECURRING_LABELS = ["< 10%", "10–25%", "25–50%", "50–75%", "75%+ recurring"];
+const CUST_CONC_LABELS = [
+  "< 5% (spread out)",
+  "5–10%",
+  "10–25%",
+  "25–50%",
+  "> 50% (high risk)",
+];
+const SYSTEMS_LABELS = [
+  "None documented; no software systems",
+  "Basic notes",
+  "Partially documented; some use of software systems",
+  "Most processes documented; software systems in place",
+  "Full SOPs + training; extensive use of software platform",
+];
+const FIN_RECORDS_LABELS = [
+  "Unclear / messy",
+  "Basic bookkeeping & customer records",
+  "Adequate bookkeeping & customer records",
+  "Clean QuickBooks/CPA; most underlying operational data available",
+  "Reviewed or audited financials; complete underlying operational data",
 ];
 
-const LEVELS = ["Very low", "Low", "Moderate", "High", "Very high"];
+/** Slider config: API key, DOM id (may include hyphen), display labels */
+const SLIDER_CONFIG = [
+  {
+    key: "growth",
+    domId: "growth",
+    displayId: "growth-display",
+    title: "3-Year Revenue Growth Rate",
+    labels: GROWTH_LABELS,
+    left: "Declining",
+    right: "Hypergrowth",
+    help: "How has revenue trended over the past 3 years?",
+  },
+  {
+    key: "owner_dep",
+    domId: "owner-dep",
+    displayId: "owner-dep-display",
+    title: "Owner Dependency / Management Team Strength",
+    labels: OWNER_DEP_LABELS,
+    left: "Fully dependent on owner(s)",
+    right: "Runs without owner(s)",
+    help: "How much does the business rely on the owner(s) day-to-day?",
+  },
+  {
+    key: "recurring",
+    domId: "recurring",
+    displayId: "recurring-display",
+    title: "Recurring Revenue Percentage",
+    labels: RECURRING_LABELS,
+    left: "All one-time",
+    right: "Mostly recurring",
+    help: "Contracts, subscriptions, retainers, or repeat customers.",
+  },
+  {
+    key: "cust_conc",
+    domId: "cust-conc",
+    displayId: "cust-conc-display",
+    title: "Largest Customer Revenue Concentration",
+    labels: CUST_CONC_LABELS,
+    left: "<5% (spread out)",
+    right: ">50% (one big client)",
+    help: "What percentage of revenue comes from your single largest customer?",
+  },
+  {
+    key: "systems",
+    domId: "systems",
+    displayId: "systems-display",
+    title: "Systems & Process Maturity",
+    labels: SYSTEMS_LABELS,
+    left: "Everything in owner(s) head",
+    right: "Fully documented SOPs + systems",
+    help: "How well are operations documented and followed?",
+  },
+  {
+    key: "fin_records",
+    domId: "fin-records",
+    displayId: "fin-records-display",
+    title: "Financial Record & Operational Data Quality",
+    labels: FIN_RECORDS_LABELS,
+    left: "Messy / incomplete",
+    right: "CPA-reviewed or audited",
+    help: "Accurate financials build buyer confidence.",
+  },
+];
 
 /** @type {CalculateResult | null} */
 let lastResult = null;
 let valuationId = sessionStorage.getItem(STORAGE_VALUATION) || "";
 let stepEnteredAt = Date.now();
-let pendingMethodology = null;
 
 const els = {
   loading: document.getElementById("loading"),
-  stepper: document.getElementById("stepper"),
   slidersRoot: document.getElementById("sliders-root"),
-  methodologyBanner: document.getElementById("methodology-banner"),
   methodologyModal: document.getElementById("methodology-modal"),
   modalBody: document.getElementById("modal-body"),
   modalDismiss: document.getElementById("modal-dismiss"),
 };
 
 const views = {
-  business_info: document.getElementById("view-business"),
-  financials: document.getElementById("view-financials"),
-  value_drivers: document.getElementById("view-drivers"),
-  results: document.getElementById("view-results"),
-  quiz: document.getElementById("view-quiz"),
-  snapshot: document.getElementById("view-snapshot"),
+  landing: document.getElementById("section-landing"),
+  business_info: document.getElementById("section-biz-info"),
+  financials: document.getElementById("section-financials"),
+  value_drivers: document.getElementById("section-value-drivers"),
+  results: document.getElementById("section-results"),
+  quiz: document.getElementById("section-vip-quiz"),
+  snapshot: document.getElementById("section-vip-snapshot"),
 };
 
 function showLoading(on) {
@@ -108,10 +196,6 @@ function parseUtm() {
   };
 }
 
-function getStepFromViewEl(el) {
-  return el?.dataset?.view || "landing";
-}
-
 function markStepStart() {
   stepEnteredAt = Date.now();
 }
@@ -120,99 +204,175 @@ function durationSinceStepStart() {
   return Math.max(0, Math.round((Date.now() - stepEnteredAt) / 1000));
 }
 
+function updateProgress(viewName) {
+  const prog = document.getElementById("progress-container");
+  const fill = document.getElementById("progress-fill");
+  const label = document.getElementById("progress-label");
+  const backBtn = document.getElementById("progress-back-btn");
+  if (!prog || !fill || !label) return;
+
+  if (viewName === "landing") {
+    prog.classList.remove("show");
+    backBtn?.classList.remove("visible");
+    return;
+  }
+
+  prog.classList.add("show");
+  backBtn?.classList.add("visible");
+
+  if (viewName === "results") {
+    fill.style.width = "100%";
+    label.textContent = "Valuation Complete";
+  } else if (viewName === "quiz") {
+    fill.style.width = "100%";
+    label.textContent = "Improvement Plan";
+  } else if (viewName === "snapshot") {
+    fill.style.width = "100%";
+    label.textContent = "Plan Ready ◆";
+  } else {
+    const stepMap = { business_info: 1, financials: 2, value_drivers: 3 };
+    const step = stepMap[viewName] || 1;
+    fill.style.width = `${(step / 3) * 100}%`;
+    label.textContent = `Step ${step} of 3`;
+  }
+}
+
+function progressGoBack() {
+  /** @type {Record<string, keyof typeof views | undefined>} */
+  const backMap = {
+    business_info: "landing",
+    financials: "business_info",
+    value_drivers: "financials",
+    results: "value_drivers",
+    quiz: "results",
+    snapshot: "results",
+  };
+  const dest = backMap[getCurrentViewName()];
+  if (dest) showView(dest);
+}
+
+function getCurrentViewName() {
+  for (const [name, el] of Object.entries(views)) {
+    if (el?.classList.contains("active")) return /** @type {keyof typeof views} */ (name);
+  }
+  return "landing";
+}
+
 /** @param {keyof typeof views} name */
 function showView(name) {
-  for (const v of Object.values(views)) {
-    v.classList.toggle("is-visible", v === views[name]);
+  for (const el of Object.values(views)) {
+    el?.classList.remove("active");
   }
-
-  const isForm =
-    name === "business_info" || name === "financials" || name === "value_drivers";
-  els.stepper.hidden = !isForm;
-  if (isForm) {
-    const stepMap = { business_info: 1, financials: 2, value_drivers: 3 };
-    const n = stepMap[name];
-    els.stepper.dataset.phase = "form";
-    els.stepper.querySelectorAll(".step-dot").forEach((dot) => {
-      dot.classList.toggle("is-active", dot.dataset.step === String(n));
-    });
-  } else {
-    els.stepper.dataset.phase = "post";
-  }
-
+  views[name]?.classList.add("active");
+  updateProgress(name);
   markStepStart();
-  const main = document.getElementById("main");
-  const visible = main.querySelector(".view.is-visible");
-  if (visible) visible.focus?.();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function clearErrors() {
+  document.querySelectorAll('[id^="err-"]').forEach((el) => {
+    el.textContent = "";
+    el.style.display = "none";
+  });
+  document.querySelectorAll(".field-error").forEach((el) => {
+    el.classList.remove("field-error");
+  });
+}
+
+function setError(id, msg) {
+  const err = document.getElementById(`err-${id}`);
+  const input = document.getElementById(id);
+  if (err) {
+    err.textContent = msg || "";
+    err.style.display = msg ? "block" : "none";
+  }
+  const group = input?.closest(".field-group");
+  if (group) group.classList.toggle("field-error", Boolean(msg));
 }
 
 function readInputMode() {
-  const sel = document.querySelector('input[name="input_mode"]:checked');
-  return sel?.value === "calc" ? "calc" : "know";
+  const v = document.getElementById("input_mode_field")?.value;
+  return v === "calc" ? "calc" : "know";
 }
 
 function syncModeUi() {
   const mode = readInputMode();
+  document.getElementById("mode-btn-know")?.classList.toggle("active", mode === "know");
+  document.getElementById("mode-btn-calc")?.classList.toggle("active", mode === "calc");
+
+  const knowCard = document.getElementById("mode-know-card");
   const calcFields = document.getElementById("calc-fields");
   const wrapEbitda = document.getElementById("wrap-ebitda");
   const ebitda = document.getElementById("ebitda");
   if (mode === "calc") {
-    calcFields.style.display = "grid";
-    wrapEbitda.style.display = "none";
-    ebitda.removeAttribute("required");
+    if (knowCard) knowCard.style.display = "none";
+    if (calcFields) calcFields.style.display = "block";
+    if (wrapEbitda) wrapEbitda.style.display = "none";
+    ebitda?.removeAttribute("required");
   } else {
-    calcFields.style.display = "none";
-    wrapEbitda.style.display = "flex";
-    ebitda.setAttribute("required", "");
+    if (knowCard) knowCard.style.display = "block";
+    if (calcFields) calcFields.style.display = "none";
+    if (wrapEbitda) wrapEbitda.style.display = "block";
+    ebitda?.setAttribute("required", "");
   }
 }
 
 function readSlidersFromDom() {
   /** @type {import('../../shared/types.ts').SliderValues} */
   const sliders = {};
-  for (const { key } of SLIDER_META) {
-    const el = document.getElementById(`slider_${key}`);
-    sliders[key] = el ? Number(el.value) : 3;
+  for (const s of SLIDER_CONFIG) {
+    const el = document.getElementById(s.domId);
+    sliders[s.key] = el ? Number(el.value) : 3;
   }
   return sliders;
 }
 
 function writeSlidersToDom(values) {
-  for (const { key } of SLIDER_META) {
-    const el = document.getElementById(`slider_${key}`);
-    if (el && values[key] != null) el.value = String(values[key]);
+  for (const s of SLIDER_CONFIG) {
+    const el = document.getElementById(s.domId);
+    const v = values[s.key];
+    if (el && v != null) {
+      el.value = String(v);
+      updateSliderDisplay(s.domId, s.displayId, s.labels);
+    }
   }
 }
 
+function updateSliderDisplay(sliderDomId, displayId, labels) {
+  const input = document.getElementById(sliderDomId);
+  const disp = document.getElementById(displayId);
+  if (!input || !disp) return;
+  const v = Number(input.value);
+  disp.textContent = labels[v - 1] || "";
+}
+
 function renderSliders() {
-  els.slidersRoot.innerHTML = SLIDER_META.map(
-    ({ key, label }) => `
-    <div class="slider-block" data-slider-key="${key}">
-      <div class="slider-head">
-        <span class="name">${label}</span>
-        <span class="val" id="slider_${key}_label">${LEVELS[2]}</span>
+  if (!els.slidersRoot) return;
+  els.slidersRoot.innerHTML = SLIDER_CONFIG.map(
+    (s) => `
+    <div class="form-card">
+      <div class="field-group slider-field">
+        <label for="${s.domId}">${s.title}</label>
+        <div class="slider-value-display" id="${s.displayId}">${s.labels[2]}</div>
+        <input type="range" id="${s.domId}" min="1" max="5" step="1" value="3" />
+        <div class="slider-labels"><span>${s.left}</span><span>${s.right}</span></div>
+        <span class="helper">${s.help}</span>
       </div>
-      <input type="range" id="slider_${key}" min="1" max="5" step="1" value="3" aria-valuemin="1" aria-valuemax="5" />
-      <div class="slider-scale"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
     </div>
   `
   ).join("");
 
-  for (const { key } of SLIDER_META) {
-    const input = document.getElementById(`slider_${key}`);
-    const label = document.getElementById(`slider_${key}_label`);
-    const updateLabel = () => {
-      const v = Number(input.value);
-      label.textContent = LEVELS[v - 1];
-    };
-    input.addEventListener("input", updateLabel);
-    updateLabel();
-
+  for (const s of SLIDER_CONFIG) {
+    const input = document.getElementById(s.domId);
+    if (!input) continue;
+    input.addEventListener("input", () =>
+      updateSliderDisplay(s.domId, s.displayId, s.labels)
+    );
     const debouncedTrack = debounce(() => {
       trackEvent({
         session_id: getSessionId(),
         event_type: "field_change",
-        field_name: `slider_${key}`,
+        field_name: s.domId,
         old_value: "",
         new_value: String(input.value),
         step: "value_drivers",
@@ -222,21 +382,10 @@ function renderSliders() {
   }
 }
 
-function clearErrors() {
-  document.querySelectorAll('[id^="err-"]').forEach((el) => {
-    el.textContent = "";
-  });
-}
-
-function setError(id, msg) {
-  const el = document.getElementById(`err-${id}`);
-  if (el) el.textContent = msg || "";
-}
-
 function parseNum(id, required = true) {
   const el = document.getElementById(id);
   if (!el) return { ok: false, value: 0 };
-  const raw = el.value.trim();
+  const raw = String(el.value).trim();
   if (raw === "") {
     if (required) return { ok: false, value: 0 };
     return { ok: true, value: 0 };
@@ -249,22 +398,22 @@ function parseNum(id, required = true) {
 function validateBusiness() {
   clearErrors();
   let ok = true;
-  const name = document.getElementById("business_name").value.trim();
+  const name = document.getElementById("business_name")?.value.trim();
   if (!name) {
-    setError("business_name", "Enter a business name.");
+    setError("business_name", "This field is required.");
     ok = false;
   }
-  const industry = document.getElementById("industry").value;
+  const industry = document.getElementById("industry")?.value;
   if (!industry) {
     setError("industry", "Select an industry.");
     ok = false;
   }
-  const city = document.getElementById("city").value.trim();
+  const city = document.getElementById("city")?.value.trim();
   if (!city) {
-    setError("city", "Enter a city.");
+    setError("city", "This field is required.");
     ok = false;
   }
-  const state = document.getElementById("state").value;
+  const state = document.getElementById("state")?.value;
   if (!state) {
     setError("state", "Select a state.");
     ok = false;
@@ -328,16 +477,16 @@ function validateFinancials() {
 function validateQuiz() {
   clearErrors();
   let ok = true;
-  const email = document.getElementById("lead_email").value.trim();
+  const email = document.getElementById("lead_email")?.value.trim() || "";
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     setError("lead_email", "Enter a valid email.");
     ok = false;
   }
-  if (!document.getElementById("quiz_timeline").value) {
-    setError("quiz_timeline", "Select a timeline.");
+  if (!document.getElementById("quiz_timeline")?.value) {
+    setError("quiz_timeline", "Select a timeframe.");
     ok = false;
   }
-  if (!document.getElementById("quiz_advisory_source").value) {
+  if (!document.getElementById("quiz_advisory_source")?.value) {
     setError("quiz_advisory_source", "Select an option.");
     ok = false;
   }
@@ -368,72 +517,101 @@ function collectCalculateInput() {
   return base;
 }
 
+function getIndustryLabel() {
+  const sel = document.getElementById("industry");
+  if (!sel) return "";
+  const opt = sel.options[sel.selectedIndex];
+  return opt?.text?.trim() || "";
+}
+
 /** @param {CalculateResult} r */
 function renderResults(r) {
-  document.getElementById("res-range").textContent = `${formatUsd(r.valuation_low)} – ${formatUsd(r.valuation_high)}`;
-  const biz = document.getElementById("business_name").value.trim();
-  document.getElementById("res-business-line").textContent = biz
-    ? `${biz} · ${r.industry_category}`
-    : r.industry_category;
+  const biz = document.getElementById("business_name")?.value.trim() || "Your Business";
+  document.getElementById("results-biz-name").textContent = biz;
 
-  const stats = document.getElementById("res-stats");
-  stats.innerHTML = [
-    ["Adjusted EBITDA", formatUsd(r.adj_ebitda)],
-    ["Base multiple", `${r.base_multiple.toFixed(2)}×`],
-    ["Est. multiple", `${r.estimated_multiple.toFixed(2)}×`],
-    ["Base value", formatUsd(r.valuation_base)],
-  ]
-    .map(
-      ([k, v]) => `
-    <div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>
-  `
-    )
-    .join("");
+  const dateStr = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const indLabel = getIndustryLabel() || r.industry_category;
+  document.getElementById("results-subtitle").textContent =
+    `Valuation Estimate • ${dateStr} · ${indLabel}`;
 
-  document.getElementById("res-score").textContent = String(r.value_score);
-  document.getElementById("res-band").textContent = `Business Value Score — ${r.score_band}`;
-  document.getElementById("res-band-desc").textContent = r.score_band_description;
+  document.getElementById("results-awareness").textContent = `${r.score_band} · Business Value Score`;
 
-  const good = document.getElementById("res-good");
-  const bad = document.getElementById("res-bad");
-  good.innerHTML = (r.good_factors.length ? r.good_factors : [{ name: "—", level: "", description: "No standout strengths at this rating level yet." }])
-    .map(
-      (f) => `
-    <div class="factor-card good">
-      <div class="t">${f.name}${f.level ? ` · ${f.level}` : ""}</div>
-      <p>${f.description}</p>
-    </div>
-  `
-    )
-    .join("");
-  bad.innerHTML = (r.bad_factors.length ? r.bad_factors : [{ name: "—", level: "", description: "No critical gaps flagged—still room to optimize." }])
-    .map(
-      (f) => `
-    <div class="factor-card bad">
-      <div class="t">${f.name}${f.level ? ` · ${f.level}` : ""}</div>
-      <p>${f.description}</p>
-    </div>
-  `
-    )
-    .join("");
+  const noticeEl = document.getElementById("industry-notice");
+  if (r.methodology_notice) {
+    noticeEl.style.display = "block";
+    document.getElementById("industry-notice-title").textContent =
+      "Important context for your industry";
+    document.getElementById("industry-notice-body").textContent = r.methodology_notice;
+  } else {
+    noticeEl.style.display = "none";
+  }
+
+  document.getElementById("score-num").textContent = String(r.value_score);
+  document.getElementById("score-desc").textContent = r.score_band_description;
+
+  document.getElementById("val-low").textContent = formatUsd(r.valuation_low);
+  document.getElementById("val-base").textContent = formatUsd(r.valuation_base);
+  document.getElementById("val-high").textContent = formatUsd(r.valuation_high);
+
+  document.getElementById("adj-ebitda").textContent = formatUsd(r.adj_ebitda);
+  document.getElementById("est-multiple").textContent = `${r.estimated_multiple.toFixed(2)}×`;
+
+  const bonusLine = document.getElementById("revenue-bonus-line");
+  if (r.revenue_scale_bonus > 0) {
+    bonusLine.style.display = "block";
+    document.getElementById("revenue-bonus-amt").textContent =
+      `Includes +${r.revenue_scale_bonus.toFixed(2)}× revenue-scale adjustment (illustrative).`;
+  } else {
+    bonusLine.style.display = "none";
+  }
 
   const traj = r.trajectory;
-  document.getElementById("res-traj-copy").innerHTML = `If you address the biggest levers, a realistic upside scenario could move enterprise value toward <span class="new-range">${formatUsd(traj.new_valuation_low)} – ${formatUsd(traj.new_valuation_high)}</span> (illustrative).`;
-  const ul = document.getElementById("res-traj-factors");
-  ul.innerHTML = traj.top_factors
-    .map((f) => `<li><strong>${f.name}</strong>: ${f.current_level} → ${f.target_level} (~${formatUsd(f.delta)} illustrative EBITDA impact)</li>`)
+  document.getElementById("traj-today").textContent = formatUsd(r.valuation_base);
+  document.getElementById("traj-improved").textContent = `${formatUsd(traj.new_valuation_low)} – ${formatUsd(traj.new_valuation_high)}`;
+  document.getElementById("traj-uplift").textContent = `↑ ${formatUsd(traj.uplift_amount)} potential upside`;
+
+  document.getElementById("traj-actions").innerHTML = traj.top_factors
+    .map(
+      (f) =>
+        `<div style="font-size:13px;color:var(--slate-light);margin-bottom:8px;line-height:1.5;"><strong>${f.name}</strong>: ${f.current_level} → ${f.target_level}</div>`
+    )
     .join("");
 
-  const banner = els.methodologyBanner;
-  if (r.methodology_notice) {
-    banner.textContent = r.methodology_notice;
-    banner.classList.add("is-visible");
-    pendingMethodology = r.methodology_notice;
-  } else {
-    banner.classList.remove("is-visible");
-    banner.textContent = "";
-    pendingMethodology = null;
-  }
+  const fg = document.getElementById("factors-good");
+  const fb = document.getElementById("factors-bad");
+  const good = r.good_factors.length
+    ? r.good_factors
+    : [
+        {
+          name: "—",
+          level: "",
+          description: "No standout strengths flagged at current ratings.",
+        },
+      ];
+  const bad = r.bad_factors.length
+    ? r.bad_factors
+    : [
+        {
+          name: "—",
+          level: "",
+          description: "No major discount factors flagged — still room to optimize.",
+        },
+      ];
+
+  fg.innerHTML = good
+    .map(
+      (f) => `<div class="factor-item"><span class="factor-dot"></span><div><strong>${f.name}</strong>${f.level ? ` — ${f.level}` : ""}<br>${f.description}</div></div>`
+    )
+    .join("");
+  fb.innerHTML = bad
+    .map(
+      (f) => `<div class="factor-item"><span class="factor-dot"></span><div><strong>${f.name}</strong>${f.level ? ` — ${f.level}` : ""}<br>${f.description}</div></div>`
+    )
+    .join("");
 }
 
 /** @param {CalculateResult} r */
@@ -456,29 +634,60 @@ function buildEmailContent(r) {
 /** @param {CalculateResult} r */
 function renderSnapshot(r) {
   const biz = document.getElementById("business_name").value.trim() || "your business";
-  document.getElementById("snap-lede").textContent = `Here are the three moves that typically unlock the most value for ${biz}—based on your inputs and our EBITDA-based model.`;
+  document.getElementById("snap-lede").textContent = `Based on your valuation, here are the highest-impact moves for ${biz} — tailored to what you shared.`;
 
-  const grid = document.getElementById("snap-vip");
-  grid.innerHTML = r.vip_recommendations
+  const qt = document.getElementById("quiz_timeline");
+  const timelineLabel =
+    qt?.options[qt.selectedIndex]?.text?.trim() || "Your timeline";
+  document.getElementById("snap-timeline-text").textContent = `Timeline: ${timelineLabel}`;
+
+  const rec = document.getElementById("recommendations");
+  rec.innerHTML = r.vip_recommendations
     .map(
-      (v) => `
-    <div class="vip-card">
-      <h4>${v.title}</h4>
-      <p>${v.body}</p>
+      (v, i) => `
+    <div class="rec-item">
+      <div class="rec-diamond">◆</div>
+      <div class="rec-content">
+        <div class="rec-title">${v.title}</div>
+        <div class="rec-desc">${v.body}</div>
+      </div>
     </div>
   `
     )
     .join("");
 
   const t = r.trajectory;
-  document.getElementById("snap-traj").textContent = `Illustrative “after improvements” range: ${formatUsd(t.new_valuation_low)} – ${formatUsd(t.new_valuation_high)}. Focus on ${t.top_factors
+  document.getElementById("snap-traj").textContent = `Illustrative range after key improvements: ${formatUsd(t.new_valuation_low)} – ${formatUsd(t.new_valuation_high)}. Prioritize ${t.top_factors
     .slice(0, 2)
     .map((f) => f.name.toLowerCase())
-    .join(" and ")} first.`;
+    .join(" and ")}.`;
 
   const email = encodeURIComponent(document.getElementById("lead_email").value.trim());
   const name = encodeURIComponent(biz);
-  document.getElementById("snap-calendly").href = `https://calendly.com/edgefour?email=${email}&name=${name}`;
+  const cal = document.getElementById("snap-calendly");
+  cal.href = `https://calendly.com/edgefour?email=${email}&name=${name}`;
+}
+
+async function loadIndustryOptions() {
+  const sel = document.getElementById("industry");
+  try {
+    const res = await fetch("/industry-options-fragment.html");
+    const html = await res.text();
+    sel.innerHTML = html.trim();
+  } catch {
+    sel.innerHTML =
+      '<option value="">Select your industry…</option><option value="other">Other / Not Listed</option>';
+  }
+}
+
+async function startFromLanding() {
+  trackEvent({
+    session_id: getSessionId(),
+    event_type: "step_advance",
+    step: "business_info",
+    duration_seconds: durationSinceStepStart(),
+  });
+  showView("business_info");
 }
 
 async function advanceFromBusiness() {
@@ -509,6 +718,16 @@ async function advanceFromBusiness() {
   }
 
   showView("financials");
+}
+
+function goBackToLanding() {
+  trackEvent({
+    session_id: getSessionId(),
+    event_type: "step_back",
+    step: "business_info",
+    duration_seconds: durationSinceStepStart(),
+  });
+  showView("landing");
 }
 
 function goBackToBusiness() {
@@ -609,28 +828,6 @@ async function runCalculate() {
   }
 
   showView("results");
-
-  if (pendingMethodology) {
-    els.modalBody.textContent = pendingMethodology;
-    els.methodologyModal.hidden = false;
-    els.methodologyModal.classList.add("is-open");
-    trackEvent({
-      session_id: getSessionId(),
-      event_type: "popup_opened",
-      step: "results",
-      field_name: "methodology",
-    });
-  }
-}
-
-function goBackToDrivers() {
-  trackEvent({
-    session_id: getSessionId(),
-    event_type: "step_back",
-    step: "value_drivers",
-    duration_seconds: durationSinceStepStart(),
-  });
-  showView("value_drivers");
 }
 
 function editInputsFromResults() {
@@ -690,7 +887,7 @@ function restartFlow() {
   trackEvent({
     session_id: getSessionId(),
     event_type: "restart",
-    step: "business_info",
+    step: "landing",
     duration_seconds: durationSinceStepStart(),
   });
 
@@ -714,7 +911,7 @@ function restartFlow() {
   document.getElementById("owner_salary").value = "0";
   document.getElementById("market_salary").value = "0";
   document.getElementById("addbacks").value = "0";
-  document.getElementById("mode_know").checked = true;
+  document.getElementById("input_mode_field").value = "know";
   syncModeUi();
 
   writeSlidersToDom({
@@ -730,7 +927,8 @@ function restartFlow() {
   document.getElementById("quiz_timeline").value = "";
   document.getElementById("quiz_advisory_source").value = "";
 
-  showView("business_info");
+  loadIndustryOptions();
+  showView("landing");
 }
 
 function populateStates() {
@@ -798,42 +996,60 @@ function bindFieldBlurTracking() {
   });
 }
 
-function bindModeSwitch() {
-  const radios = document.querySelectorAll('input[name="input_mode"]');
-  radios.forEach((r) => {
-    r.addEventListener("change", () => {
-      syncModeUi();
-      trackEvent({
-        session_id: getSessionId(),
-        event_type: "mode_switch",
-        field_name: "input_mode",
-        old_value: "",
-        new_value: readInputMode(),
-        step: "financials",
-      });
+function bindModeButtons() {
+  document.getElementById("mode-btn-know")?.addEventListener("click", () => {
+    document.getElementById("input_mode_field").value = "know";
+    syncModeUi();
+    trackEvent({
+      session_id: getSessionId(),
+      event_type: "mode_switch",
+      field_name: "input_mode",
+      old_value: "",
+      new_value: "know",
+      step: "financials",
+    });
+  });
+  document.getElementById("mode-btn-calc")?.addEventListener("click", () => {
+    document.getElementById("input_mode_field").value = "calc";
+    syncModeUi();
+    trackEvent({
+      session_id: getSessionId(),
+      event_type: "mode_switch",
+      field_name: "input_mode",
+      old_value: "",
+      new_value: "calc",
+      step: "financials",
     });
   });
 }
 
-function init() {
+async function init() {
+  await loadIndustryOptions();
   populateStates();
   renderSliders();
   syncModeUi();
   bindFieldBlurTracking();
-  bindModeSwitch();
+  bindModeButtons();
 
-  document.getElementById("btn-business-next").addEventListener("click", advanceFromBusiness);
-  document.getElementById("btn-financials-back").addEventListener("click", goBackToBusiness);
-  document.getElementById("btn-financials-next").addEventListener("click", advanceFromFinancials);
-  document.getElementById("btn-drivers-back").addEventListener("click", goBackToFinancials);
-  document.getElementById("btn-calculate").addEventListener("click", runCalculate);
-  document.getElementById("btn-results-edit").addEventListener("click", editInputsFromResults);
-  document.getElementById("btn-results-quiz").addEventListener("click", openQuiz);
-  document.getElementById("btn-quiz-back").addEventListener("click", backFromQuiz);
-  document.getElementById("btn-quiz-submit").addEventListener("click", submitQuizForm);
-  document.getElementById("btn-restart").addEventListener("click", restartFlow);
+  document.getElementById("btn-landing-start")?.addEventListener("click", startFromLanding);
+  document.getElementById("btn-biz-back")?.addEventListener("click", goBackToLanding);
+  document.getElementById("btn-business-next")?.addEventListener("click", advanceFromBusiness);
+  document.getElementById("btn-financials-back")?.addEventListener("click", goBackToBusiness);
+  document.getElementById("btn-financials-next")?.addEventListener("click", advanceFromFinancials);
+  document.getElementById("btn-drivers-back")?.addEventListener("click", goBackToFinancials);
+  document.getElementById("btn-calculate")?.addEventListener("click", runCalculate);
+  document.getElementById("btn-results-back-drivers")?.addEventListener("click", editInputsFromResults);
+  document.getElementById("btn-results-quiz")?.addEventListener("click", openQuiz);
+  document.getElementById("btn-quiz-back")?.addEventListener("click", backFromQuiz);
+  document.getElementById("btn-quiz-submit")?.addEventListener("click", submitQuizForm);
+  document.getElementById("btn-restart")?.addEventListener("click", restartFlow);
+  document.getElementById("btn-restart-from-results")?.addEventListener("click", restartFlow);
+  document.getElementById("btn-snapshot-back-results")?.addEventListener("click", () =>
+    showView("results")
+  );
+  document.getElementById("progress-back-btn")?.addEventListener("click", progressGoBack);
 
-  els.modalDismiss.addEventListener("click", () => {
+  els.modalDismiss?.addEventListener("click", () => {
     els.methodologyModal.classList.remove("is-open");
     els.methodologyModal.hidden = true;
     trackEvent({
@@ -844,15 +1060,14 @@ function init() {
     });
   });
 
-  const sessionId = getSessionId();
   saveSession({
-    session_id: sessionId,
+    session_id: getSessionId(),
     referrer: document.referrer || "",
     ...parseUtm(),
     user_agent: navigator.userAgent,
   });
 
-  showView("business_info");
+  showView("landing");
 }
 
 init();
