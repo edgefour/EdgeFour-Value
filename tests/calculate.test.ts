@@ -1,7 +1,7 @@
-import { describe, expect, test } from 'bun:test'
-import { post, json } from './helpers.ts'
-import { calculate } from '../api/_lib/calculator.ts'
-import type { CalculateResult } from '../shared/types.ts'
+import { describe, expect, test } from 'vitest'
+import { post, json } from './helpers.js'
+import { calculate } from '../api/_lib/calculator.js'
+import type { CalculateResult } from '../shared/types.js'
 
 const validBody = {
   industry: 'mgmt_consulting',
@@ -28,17 +28,17 @@ describe('calculate', () => {
     expect(res.status).toBe(200)
 
     const body = (await json(res)) as CalculateResult
-    expect(body.adj_ebitda).toBeNumber()
-    expect(body.valuation_low).toBeNumber()
-    expect(body.valuation_base).toBeNumber()
-    expect(body.valuation_high).toBeNumber()
-    expect(body.value_score).toBeNumber()
-    expect(body.score_band).toBeString()
-    expect(body.good_factors).toBeArray()
-    expect(body.bad_factors).toBeArray()
-    expect(body.vip_recommendations).toBeArray()
+    expect(typeof body.adj_ebitda).toBe('number')
+    expect(typeof body.valuation_low).toBe('number')
+    expect(typeof body.valuation_base).toBe('number')
+    expect(typeof body.valuation_high).toBe('number')
+    expect(typeof body.value_score).toBe('number')
+    expect(typeof body.score_band).toBe('string')
+    expect(Array.isArray(body.good_factors)).toBe(true)
+    expect(Array.isArray(body.bad_factors)).toBe(true)
+    expect(Array.isArray(body.vip_recommendations)).toBe(true)
     expect(body.trajectory).toBeDefined()
-    expect(body.trajectory.top_factors).toBeArray()
+    expect(Array.isArray(body.trajectory.top_factors)).toBe(true)
   })
 
   test('returns 400 for invalid slider value', async () => {

@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'bun:test'
-import { post } from './helpers.ts'
+import { describe, expect, test } from 'vitest'
+import { post } from './helpers.js'
 
 describe('track-event', () => {
   test('returns 204 for valid event', async () => {

@@ -1,4 +1,4 @@
-import { app } from '../api/index.ts'
+import { app } from '../api/index.js'
 
 /** POST JSON to the Hono app and return the Response. */
 export function post(path: string, body: unknown): Promise<Response> {

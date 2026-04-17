@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'bun:test'
-import { post, json } from './helpers.ts'
+import { describe, expect, test } from 'vitest'
+import { post, json } from './helpers.js'
 
 const validBody = {
   session_id: crypto.randomUUID(),

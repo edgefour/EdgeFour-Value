@@ -1,6 +1,6 @@
-import { describe, expect, test } from 'bun:test'
-import { sendReport } from '../api/_lib/send-email.ts'
-import { createTestValuation } from './helpers.ts'
+import { describe, expect, test } from 'vitest'
+import { sendReport } from '../api/_lib/send-email.js'
+import { createTestValuation } from './helpers.js'
 
 describe('sendReport', () => {
   test('returns a resend_id on success', async () => {
@@ -13,6 +13,6 @@ describe('sendReport', () => {
       html: '<p>Test email</p>',
     })
     expect(result.resend_id).toBeDefined()
-    expect(result.resend_id).toStartWith('resend_mock_')
+    expect(result.resend_id).toMatch(/^resend_mock_/)
   })
 })

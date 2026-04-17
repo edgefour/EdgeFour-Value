@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'bun:test'
-import { post, json } from './helpers.ts'
+import { describe, expect, test } from 'vitest'
+import { post, json } from './helpers.js'
 
 describe('calendly-webhook', () => {
   test('handles invitee.created event', async () => {

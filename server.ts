@@ -4,7 +4,7 @@
  * Serves static files from public/ and js/.
  */
 
-import { app } from './api/index.ts'
+import { app } from './api/index.js'
 
 const port = Number(process.env.PORT) || 8888
 if (!process.env.ALLOWED_ORIGIN) {

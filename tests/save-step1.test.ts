@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'bun:test'
-import { post, json, createTestSession } from './helpers.ts'
+import { describe, expect, test } from 'vitest'
+import { post, json, createTestSession } from './helpers.js'
 
 describe('save-step1', () => {
   test('returns valuation_id for valid input', async () => {
