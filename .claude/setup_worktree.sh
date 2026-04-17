@@ -14,6 +14,12 @@ MAIN_REPO="${MAIN_REPO%/.git}"
 echo "Setting up worktree: $WORKTREE_DIR"
 echo "Main repo: $MAIN_REPO"
 
+# Copy .claude directory from main repo
+if [ -d "$MAIN_REPO/.claude" ]; then
+  cp -r "$MAIN_REPO/.claude" "$WORKTREE_DIR/.claude"
+  echo "Copied .claude"
+fi
+
 # Copy all .env* files (except .env.sample which is tracked in git)
 for env_file in "$MAIN_REPO"/.env*; do
   [ -f "$env_file" ] || continue
