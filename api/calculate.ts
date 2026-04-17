@@ -1,6 +1,6 @@
 import { handleCors, jsonResponse } from './_lib/cors.ts'
 import { validateCalculateInput } from './_lib/validate.ts'
-import { MOCK_CALCULATE_RESULT } from './_lib/mock-data.ts'
+import { calculate } from './_lib/calculator.ts'
 import { logError } from './_lib/db.ts'
 import type { CalculateInput } from '../shared/types.ts'
 
@@ -16,8 +16,8 @@ export async function POST(req: Request): Promise<Response> {
       return jsonResponse({ error: validation.error }, 400)
     }
 
-    // TODO: Replace with real calculation logic ported from edgefour-value.html
-    return jsonResponse(MOCK_CALCULATE_RESULT)
+    const result = calculate(body)
+    return jsonResponse(result)
   } catch (err) {
     await logError(null, 'calculate', String(err))
     return jsonResponse({ error: 'Internal server error' }, 500)
