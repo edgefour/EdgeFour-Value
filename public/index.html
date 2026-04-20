@@ -452,67 +452,72 @@
   }
   .results-inner {
     max-width: 760px; margin: 0 auto;
-    padding: 40px 24px 80px;
+    padding: 28px 24px 48px;
   }
-  .results-header { text-align: center; margin-bottom: 48px; }
-  .results-badge {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.22);
-    border-radius: 100px;
-    padding: 6px 16px;
-    margin-bottom: 20px;
-  }
-  .results-badge span { font-size: 12px; font-weight: 600; color: var(--gold-light); letter-spacing: 1px; text-transform: uppercase; }
-  .results-h1 {
-    font-family: 'Inter', sans-serif;
-    font-size: clamp(32px, 5vw, 56px);
-    font-weight: 600;
-    color: var(--white);
-    line-height: 1.1;
-    margin-bottom: 10px;
-  }
-  .results-subtitle { font-size: 16px; color: var(--slate-light); }
 
-  /* Score card */
-  .score-card {
+  /* Hero (merged header + score) */
+  .results-hero {
     background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.04));
     border: 1px solid rgba(255,255,255,0.15);
     border-radius: var(--radius);
-    padding: 36px;
+    padding: 28px 32px;
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     position: relative; overflow: hidden;
   }
-  .score-card::before {
+  .results-hero::before {
     content: '';
     position: absolute;
     top: -60px; right: -60px;
     width: 200px; height: 200px;
     background: radial-gradient(circle, rgba(255,255,255,0.06), transparent 70%);
   }
+  .hero-divider {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    margin: 14px auto;
+    width: 80px;
+  }
+  .results-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 100px;
+    padding: 6px 16px;
+    margin-bottom: 12px;
+  }
+  .results-badge span { font-size: 12px; font-weight: 600; color: var(--gold-light); letter-spacing: 1px; text-transform: uppercase; }
+  .results-h1 {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(26px, 4vw, 40px);
+    font-weight: 600;
+    color: var(--white);
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+  .results-subtitle { font-size: 14px; color: var(--slate-light); }
   .score-label { font-size: 12px; font-weight: 700; color: var(--gold); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
   .score-num {
     font-family: 'Inter', sans-serif;
-    font-size: 42px; font-weight: 700;
+    font-size: 36px; font-weight: 700;
     color: var(--gold-light);
     line-height: 1;
     margin-bottom: 8px;
   }
-  .score-denom { font-size: 22px; color: var(--slate-light); }
+  .score-denom { font-size: 18px; color: var(--slate-light); }
   .score-desc { font-size: 14px; color: var(--slate-light); }
 
   /* Valuation range */
   .valuation-grid {
     display: grid; grid-template-columns: 1fr 1fr 1fr;
-    gap: 12px; margin-bottom: 20px;
+    gap: 12px; margin-bottom: 14px;
   }
-  @media (max-width: 520px) { .valuation-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 520px) { .valuation-grid { grid-template-columns: 1fr; } .valuation-grid .metric-card { grid-column: auto; } }
   .val-card {
     background: rgba(255,255,255,0.04);
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: 12px;
-    padding: 24px 20px;
+    padding: 16px 16px;
     text-align: center;
   }
   .val-card.base {
@@ -523,10 +528,10 @@
   .val-card.base .val-card-label { color: var(--gold); }
   .val-amount {
     font-family: 'Inter', sans-serif;
-    font-size: 34px; font-weight: 700;
+    font-size: 28px; font-weight: 700;
     color: var(--white); line-height: 1;
   }
-    .val-card.base .val-amount { color: var(--gold-light); font-size: 46px; font-weight: 800; }
+    .val-card.base .val-amount { color: var(--gold-light); font-size: 38px; font-weight: 800; }
   .val-card.base .val-card-label { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.85); }
 
   /* ---- INDUSTRY METHODOLOGY NOTICE ---- */
@@ -557,31 +562,31 @@
   /* Metrics row */
   .metrics-row {
     display: grid; grid-template-columns: 1fr 1fr;
-    gap: 12px; margin-bottom: 20px;
+    gap: 12px; margin-bottom: 14px;
   }
   .metric-card {
     background: rgba(255,255,255,0.04);
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 12px;
-    padding: 20px;
+    padding: 10px 16px;
   }
-  .metric-label { font-size: 12px; font-weight: 600; color: var(--slate-light); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 6px; }
+  .metric-label { font-size: 11px; font-weight: 600; color: var(--slate-light); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 2px; }
   .metric-value {
     font-family: 'Inter', sans-serif;
-    font-size: 28px; font-weight: 700;
+    font-size: 20px; font-weight: 700;
     color: var(--white);
   }
 
   /* Factors */
-  .factors-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .factors-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
   @media (max-width: 520px) { .factors-grid { grid-template-columns: 1fr; } }
   .factors-card {
     background: rgba(255,255,255,0.04);
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 12px;
-    padding: 24px;
+    padding: 16px;
   }
-  .factors-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .factors-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
   .factors-card.good h3 { color: #4CAF82; }
   .factors-card.bad h3 { color: #E57373; }
   .factor-item {
@@ -628,16 +633,16 @@
   .cta-card {
     background: linear-gradient(135deg, var(--gold), var(--gold-light));
     border-radius: var(--radius);
-    padding: 40px;
+    padding: 28px 32px;
     text-align: center;
     margin-bottom: 24px;
   }
   .cta-card h3 {
     font-family: 'Inter', sans-serif;
-    font-size: 30px; font-weight: 700;
-    color: var(--navy); margin-bottom: 10px;
+    font-size: 24px; font-weight: 700;
+    color: var(--navy); margin-bottom: 8px;
   }
-  .cta-card p { font-size: 15px; color: rgba(13,27,42,0.7); margin-bottom: 24px; }
+  .cta-card p { font-size: 13px; color: rgba(13,27,42,0.7); margin-bottom: 16px; }
   .btn-cta-book {
     display: inline-flex; align-items: center; gap: 8px;
     background: var(--navy);
@@ -1074,21 +1079,21 @@
     background: rgba(255,255,255,0.04);
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: var(--radius);
-    padding: 28px;
-    margin-bottom: 20px;
+    padding: 20px;
+    margin-bottom: 14px;
   }
   .trajectory-card h3 {
     font-family: 'Inter', sans-serif;
-    font-size: 22px; font-weight: 600;
-    color: var(--white); margin-bottom: 20px;
+    font-size: 18px; font-weight: 600;
+    color: var(--white); margin-bottom: 10px;
   }
   .trajectory-row {
     display: grid; grid-template-columns: 1fr auto 1fr;
-    gap: 12px; align-items: center; margin-bottom: 20px;
+    gap: 12px; align-items: center; margin-bottom: 12px;
   }
   .traj-col { text-align: center; }
   .traj-label { font-size: 11px; font-weight: 700; color: var(--slate-light); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
-  .traj-value { font-family: 'Inter', sans-serif; font-size: 28px; font-weight: 700; color: var(--white); }
+  .traj-value { font-family: 'Inter', sans-serif; font-size: 24px; font-weight: 700; color: var(--white); }
   .traj-col.improved .traj-value { color: var(--gold-light); }
   .traj-arrow { font-size: 22px; color: var(--gold); text-align: center; }
   .traj-uplift {
@@ -1099,7 +1104,7 @@
     padding: 5px 14px;
     font-size: 13px; font-weight: 700;
     color: #4CAF82;
-    margin-bottom: 16px;
+    margin-bottom: 10px;
   }
   .traj-actions { }
   .traj-action-item {
@@ -1446,18 +1451,18 @@
 
   /* ---- AWARENESS COPY ELEMENTS ---- */
   .results-awareness {
-    font-size: 15px;
+    font-size: 13px;
     color: var(--slate-light);
-    margin-top: 10px;
+    margin-top: 6px;
     line-height: 1.6;
     font-style: italic;
     opacity: 0.9;
   }
   .traj-context {
-    font-size: 13px;
+    font-size: 12px;
     color: var(--slate-light);
     line-height: 1.6;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
     margin-top: -8px;
   }
   .recs-context {
@@ -2272,11 +2277,15 @@
 <!-- SECTION 5: RESULTS -->
 <div class="section" id="section-results">
   <div class="results-inner">
-    <div class="results-header fade-in">
+    <div class="results-hero fade-in">
       <div class="results-badge"><span>Your Valuation Report</span></div>
       <h1 class="results-h1" id="results-biz-name">Your Business</h1>
       <p class="results-subtitle" id="results-subtitle">Valuation Estimate • <span id="results-date"></span></p>
       <p class="results-awareness" id="results-awareness"></p>
+      <div class="hero-divider"></div>
+      <div class="score-label">Business Value Score</div>
+      <div class="score-num"><span id="score-num">72</span><span class="score-denom">/100</span></div>
+      <div class="score-desc" id="score-desc">Your business has solid fundamentals with clear opportunities to increase value.</div>
     </div>
 
     <!-- Industry Methodology Notice (shown for non-EBITDA industries) -->
@@ -2284,13 +2293,6 @@
       <div class="industry-notice-eyebrow">⚠ Valuation Methodology Note</div>
       <div class="industry-notice-title" id="industry-notice-title"></div>
       <p class="industry-notice-body" id="industry-notice-body"></p>
-    </div>
-
-    <!-- Score -->
-    <div class="score-card fade-in-delay-1">
-      <div class="score-label">Business Value Score</div>
-      <div class="score-num"><span id="score-num">72</span><span class="score-denom">/100</span></div>
-      <div class="score-desc" id="score-desc">Your business has solid fundamentals with clear opportunities to increase value.</div>
     </div>
 
     <!-- Valuation Range -->
@@ -2318,7 +2320,7 @@
       <div class="metric-card">
         <div class="metric-label">Estimated EBITDA Multiple</div>
         <div class="metric-value" id="est-multiple">—</div>
-        <div id="revenue-bonus-line" style="display:none;font-size:11px;color:var(--slate-light);margin-top:6px;line-height:1.5;">
+        <div id="revenue-bonus-line" style="display:none;font-size:11px;color:var(--slate-light);margin-top:4px;line-height:1.5;">
           <span id="revenue-bonus-amt"></span>
         </div>
       </div>
