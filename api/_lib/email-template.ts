@@ -164,7 +164,7 @@ export function buildReportEmail(data: EmailData): string {
               </td>
               <td style="padding:16px;text-align:center;width:34%;border-right:1px solid #E8ECF1;">
                 <div style="font-size:11px;color:#8FA3BA;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Multiple</div>
-                <div style="font-size:18px;font-weight:700;color:#1B2A4A;">${data.estimated_multiple.toFixed(1)}x</div>
+                <div style="font-size:18px;font-weight:700;color:#1B2A4A;">${data.estimated_multiple.toFixed(2)}x</div>
               </td>
               <td style="padding:16px;text-align:center;width:33%;">
                 <div style="font-size:11px;color:#8FA3BA;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Value Score</div>

@@ -340,7 +340,7 @@ async function calculateAndShow() {
   document.getElementById('val-base').textContent = formatMoney(r.valuation_base);
   document.getElementById('val-high').textContent = formatMoney(r.valuation_high);
   document.getElementById('adj-ebitda').textContent = formatMoney(r.adj_ebitda);
-  document.getElementById('est-multiple').textContent = Math.round(r.estimated_multiple) + 'x';
+  document.getElementById('est-multiple').textContent = r.estimated_multiple.toFixed(2) + 'x';
 
   const revBonusLine = document.getElementById('revenue-bonus-line');
   const revBonusAmt  = document.getElementById('revenue-bonus-amt');
