@@ -501,7 +501,7 @@ export function calculate(input: CalculateInput): CalculateResult {
       name: f.name,
       current_level: sliderLevels[currentSliderVal - 1],
       target_level: sliderLevels[targetSliderVal - 1],
-      delta: Math.round(adjEBITDA * f.delta),
+      delta: Number(f.delta.toFixed(2)),
     }
   })
 

@@ -56,6 +56,7 @@ export type CalculateResult = {
       name: string
       current_level: string
       target_level: string
+      // Multiple-point gain from a 2-level slider improvement (e.g. 1.0, 0.8), not dollars
       delta: number
     }>
   }
