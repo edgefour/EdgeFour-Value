@@ -430,10 +430,10 @@ export function calculate(input: CalculateInput): CalculateResult {
   multipleAdj += systemsAdj[systems - 1]
   multipleAdj += finRecAdj[finRec - 1]
 
-  // ── Years bonus — percentage of baseline industry multiple ──
+  // ── Years bonus — flat absolute multiple bump ──
   let yearsBonus = 0
-  if (years >= 10) yearsBonus = baseMultiple * 0.10
-  else if (years >= 5) yearsBonus = baseMultiple * 0.15
+  if (years >= 10) yearsBonus = 0.3
+  else if (years >= 5) yearsBonus = 0.1
   multipleAdj += yearsBonus
 
   // ── Revenue scale bonus ──
