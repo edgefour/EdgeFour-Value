@@ -843,7 +843,6 @@ const INDUSTRY_TO_CONFIG = {
   law_general: '_professional',
   law_pi: '_professional',
   engineering: '_professional',
-  msp: '_technology',
   marketing_agency: '_professional',
   pr_firm: '_professional',
   mgmt_consulting: '_professional',
