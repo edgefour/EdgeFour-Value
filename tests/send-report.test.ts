@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { post, json, createTestValuation } from './helpers.js'
+import { db } from '../src/db/index.js'
+import { functionErrors } from '../src/db/schema/index.js'
+import { and, eq, gte } from 'drizzle-orm'
 
 // Mock the Resend wrapper — these tests cover the /send-report contract
 // (DB-derived rendering, error paths), not the Resend SDK itself.
@@ -49,7 +52,9 @@ describe('send-report', () => {
     expect(await json(res)).toEqual({ ok: true })
 
     expect(resendMock.sendEmail).toHaveBeenCalledOnce()
-    const call = resendMock.sendEmail.mock.calls[0][0] as { html: string; subject: string; to: string }
+    const firstCall = resendMock.sendEmail.mock.calls[0]
+    expect(firstCall).toBeDefined()
+    const call = firstCall![0] as { html: string; subject: string; to: string }
     expect(call.to).toBe('lead@example.com')
     // Subject mirrors the persisted business name from save-step1 ("Test Corp"),
     // proving the server pulled from DB rather than echoing client input.
@@ -64,6 +69,7 @@ describe('send-report', () => {
     // columns are NULL. The handler must refuse to render rather than
     // silently emailing placeholder content.
     const ids = await createTestValuation()
+    const before = new Date()
     const res = await post('/api/send-report', {
       ...ids,
       recipient_email: 'lead@example.com',
@@ -72,6 +78,16 @@ describe('send-report', () => {
     const body = (await json(res)) as { error: string }
     expect(body.error).toContain('missing')
     expect(resendMock.sendEmail).not.toHaveBeenCalled()
+
+    // 422 is a client-induced state (pre-migration row, abandoned quiz).
+    // It must NOT write to function_errors — that table is reserved for
+    // unexpected exceptions, and polluting it would noise up alerting.
+    const errors = await db.select().from(functionErrors)
+      .where(and(
+        eq(functionErrors.functionName, 'send-report'),
+        gte(functionErrors.createdAt, before),
+      ))
+    expect(errors).toHaveLength(0)
   })
 
   test('returns 404 when valuation_id does not exist', async () => {

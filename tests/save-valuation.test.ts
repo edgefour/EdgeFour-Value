@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { post, json, createTestValuation } from './helpers.js'
+import { post, json, createTestSession, createTestValuation } from './helpers.js'
 import { db } from '../src/db/index.js'
 import { valuations } from '../src/db/schema/index.js'
 import { eq } from 'drizzle-orm'
@@ -83,5 +83,16 @@ describe('save-valuation', () => {
       sliders: { ...sliders, growth: 9 },
     })
     expect(res.status).toBe(400)
+  })
+
+  test('returns 404 when valuation_id has no row (skipped /save-step1)', async () => {
+    // Session exists, but no save-step1 was called, so the valuation row is
+    // absent. Previously the UPDATE would silently affect 0 rows and the
+    // handler would return 200, which made send-report fail much later
+    // with a 404. Now the failure surfaces immediately.
+    const session_id = await createTestSession()
+    const valuation_id = crypto.randomUUID()
+    const res = await post('/api/save-valuation', inputBody({ session_id, valuation_id }))
+    expect(res.status).toBe(404)
   })
 })

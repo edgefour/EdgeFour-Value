@@ -131,8 +131,14 @@ export async function updateValuation(
     if (s.fin_records != null) setValues.finRecordsSlider = s.fin_records
   }
 
-  await db.update(valuations).set(setValues).where(eq(valuations.id, valuation_id))
-  return { ok: true }
+  // .returning() lets us detect a no-op update (caller passed a stale or
+  // unknown valuation_id). Without this we'd silently return 200 OK and the
+  // user's frontend would think the save succeeded.
+  const updated = await db.update(valuations)
+    .set(setValues)
+    .where(eq(valuations.id, valuation_id))
+    .returning({ id: valuations.id })
+  return { ok: updated.length > 0, rowCount: updated.length }
 }
 
 export async function updateSession(

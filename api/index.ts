@@ -150,7 +150,7 @@ app.post('/save-valuation', async (c) => {
 
     const result = calculate(calcInput)
 
-    await updateValuation(body.valuation_id, {
+    const { rowCount } = await updateValuation(body.valuation_id, {
       input_mode: body.input_mode,
       revenue: body.revenue,
       ebitda: body.ebitda,
@@ -182,6 +182,10 @@ app.post('/save-valuation', async (c) => {
       sliders: body.sliders,
       calculated_at: new Date().toISOString(),
     })
+
+    if (rowCount === 0) {
+      return c.json({ error: 'valuation not found — call /save-step1 first' }, 404)
+    }
 
     await updateSession(body.session_id, { furthest_step: 'results' })
 
@@ -256,6 +260,8 @@ app.post('/send-report', async (c) => {
     // Every field below must be populated before we can build the email.
     // We refuse to render with placeholders so the recipient never sees
     // "Your Business" or a zeroed-out valuation slipping through silently.
+    // After the null check we widen to the non-null shape so the rest of the
+    // handler doesn't need bangs that could rot if the check is moved.
     const required = {
       businessName: v.businessName,
       industry: v.industry,
@@ -275,39 +281,43 @@ app.post('/send-report', async (c) => {
     }
     const missing = Object.entries(required).filter(([, val]) => val == null).map(([k]) => k)
     if (missing.length > 0) {
-      await logError(body.session_id, 'send-report', `valuation ${body.valuation_id} missing fields: ${missing.join(', ')}`)
+      // Client-induced 422 — the valuation row exists but never had
+      // /save-valuation called against it (e.g. pre-migration row, or quiz
+      // abandoned). Not a system error, so don't pollute function_errors.
+      console.warn(`[send-report] valuation ${body.valuation_id} incomplete; missing: ${missing.join(', ')}`)
       return c.json({ error: `valuation is incomplete; missing: ${missing.join(', ')}` }, 422)
     }
 
-    const trajectoryTopFactors = v.trajectoryTopFactors as Array<{ name: string; delta: number }>
+    const r = required as { [K in keyof typeof required]: NonNullable<(typeof required)[K]> }
+    const topFactors = r.trajectoryTopFactors as Array<{ name: string; delta: number }>
 
     const html = buildReportEmail({
-      business_name: v.businessName!,
-      industry: v.industry!,
-      valuation_low: Number(v.valuationLow),
-      valuation_base: Number(v.valuationBase),
-      valuation_high: Number(v.valuationHigh),
-      value_score: v.valueScore!,
-      score_band: v.scoreBand!,
-      adj_ebitda: Number(v.adjEbitda),
-      estimated_multiple: Number(v.estimatedMultiple),
-      good_factors: v.goodFactors as Array<{ name: string; description: string }>,
-      bad_factors: v.badFactors as Array<{ name: string; description: string }>,
-      trajectory_top_factors: trajectoryTopFactors,
-      trajectory_uplift: trajectoryTopFactors.length > 0
+      business_name: r.businessName,
+      industry: r.industry,
+      valuation_low: Number(r.valuationLow),
+      valuation_base: Number(r.valuationBase),
+      valuation_high: Number(r.valuationHigh),
+      value_score: r.valueScore,
+      score_band: r.scoreBand,
+      adj_ebitda: Number(r.adjEbitda),
+      estimated_multiple: Number(r.estimatedMultiple),
+      good_factors: r.goodFactors as Array<{ name: string; description: string }>,
+      bad_factors: r.badFactors as Array<{ name: string; description: string }>,
+      trajectory_top_factors: topFactors,
+      trajectory_uplift: topFactors.length > 0
         ? {
-            uplift_amount: Number(v.trajectoryUpliftAmount),
-            new_valuation_base: Number(v.trajectoryNewValuationBase),
+            uplift_amount: Number(r.trajectoryUpliftAmount),
+            new_valuation_base: Number(r.trajectoryNewValuationBase),
           }
         : undefined,
-      vip_recommendations: v.vipRecommendations as Array<{ title: string; body: string }>,
+      vip_recommendations: r.vipRecommendations as Array<{ title: string; body: string }>,
     })
 
     await sendReport({
       session_id: body.session_id,
       valuation_id: body.valuation_id,
       recipient_email: body.recipient_email,
-      business_name: v.businessName!,
+      business_name: r.businessName,
       html,
     })
 
