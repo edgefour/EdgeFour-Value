@@ -225,9 +225,19 @@ export function buildReportEmail(data: EmailData): string {
         <tr><td style="padding:16px 32px 32px;text-align:center;">
           <div style="border-top:1px solid #E8ECF1;padding-top:24px;">
             <p style="margin:0 0 16px;font-size:15px;color:#1B2A4A;font-weight:600;">Ready to take the next step?</p>
-            <a href="https://calendly.com/edgefour" target="_blank" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#C9A84C,#E8C97A);color:#1B2A4A;font-size:15px;font-weight:700;text-decoration:none;border-radius:8px;">
-              Schedule a Value Improvement Call
+            <!--[if mso]>
+            <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://calendly.com/edgefour" style="height:52px;v-text-anchor:middle;width:340px;" arcsize="50%" stroke="f" fillcolor="#C9A84C">
+              <w:anchorlock/>
+              <center style="color:#1B2A4A;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;font-weight:700;letter-spacing:0.3px;">Schedule a Value Improvement Call</center>
+            </v:roundrect>
+            <![endif]-->
+            <!--[if !mso]><!-- -->
+            <a href="https://calendly.com/edgefour" target="_blank" style="display:inline-block;padding:16px 36px;background:linear-gradient(135deg,#C9A84C,#E8C97A);color:#1B2A4A;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;font-weight:700;letter-spacing:0.3px;text-decoration:none;border-radius:100px;box-shadow:0 8px 32px rgba(201,168,76,0.35);">
+              <svg width="18" height="18" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline;vertical-align:middle;margin-right:10px;">
+                <path d="M3 2.5 C3 2.5 4 2 5 3.5 L6 5.5 C6.3 6.1 6 6.5 5.5 7 C5 7.5 5.2 8 5.8 8.8 C6.5 9.8 7.2 10.5 8.2 11.2 C9 11.8 9.5 12 10 11.5 C10.5 11 10.9 10.7 11.5 11 L13.5 12 C15 13 14.5 14 14.5 14 C14.5 14 13 15.5 11 14.5 C7 12.5 3.5 9 1.5 5 C0.5 3 2 1.5 3 2.5 Z" stroke="#1B2A4A" stroke-width="1.2" fill="none" stroke-linejoin="round"/>
+              </svg>Schedule a Value Improvement Call
             </a>
+            <!--<![endif]-->
             <p style="margin:16px 0 0;font-size:13px;color:#8FA3BA;">
               Or email us at <a href="mailto:info@edgefourllc.com" style="color:#C9A84C;">info@edgefourllc.com</a>
             </p>
