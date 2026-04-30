@@ -16,6 +16,10 @@ type EmailData = {
   good_factors: Array<{ name: string; description: string }>
   bad_factors: Array<{ name: string; description: string }>
   trajectory_top_factors: Array<{ name: string; delta: number }>
+  trajectory_uplift?: {
+    uplift_amount: number
+    new_valuation_base: number
+  }
   vip_recommendations: Array<{ title: string; body: string }>
 }
 
@@ -198,9 +202,29 @@ export function buildReportEmail(data: EmailData): string {
         <tr><td style="padding:0 32px;"><div style="border-top:1px solid #E8ECF1;"></div></td></tr>
 
         <!-- Trajectory / Uplift -->
-        <tr><td style="padding:24px 32px;">
+        <tr><td style="padding:24px 32px 8px;">
           <p style="margin:0 0 4px;font-size:13px;color:#C9A84C;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;">What Your Business Could Be Worth</p>
-          <p style="margin:0 0 16px;font-size:14px;color:#4A6080;line-height:1.5;">By addressing these key areas, your valuation multiple could increase meaningfully. Here are the highest-impact improvements:</p>
+          <p style="margin:0 0 16px;font-size:14px;color:#4A6080;line-height:1.5;">Most owners are surprised by the gap between the value of their company today and the value it could be after making just 2 key improvements.</p>
+          ${data.trajectory_uplift ? `
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+            <tr>
+              <td style="padding:12px 8px;text-align:center;width:45%;">
+                <div style="font-size:11px;color:#8FA3BA;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;font-weight:600;">Today</div>
+                <div style="font-size:22px;font-weight:700;color:#1B2A4A;">${formatMoney(data.valuation_base)}</div>
+              </td>
+              <td style="padding:12px 8px;text-align:center;width:10%;color:#C9A84C;font-size:20px;font-weight:700;">&rarr;</td>
+              <td style="padding:12px 8px;text-align:center;width:45%;">
+                <div style="font-size:11px;color:#8FA3BA;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;font-weight:600;">After Key Improvements</div>
+                <div style="font-size:22px;font-weight:700;color:#C9A84C;">${formatMoney(data.trajectory_uplift.new_valuation_base)}</div>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="3" style="padding:8px 0 0;text-align:center;">
+                <span style="display:inline-block;padding:6px 14px;background:#E8F5E9;border:1px solid #2d6a4f;border-radius:999px;font-size:13px;font-weight:700;color:#2d6a4f;">+${formatMoney(data.trajectory_uplift.uplift_amount)} increase in value with key improvements</span>
+              </td>
+            </tr>
+          </table>
+          ` : ''}
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
             ${trajectoryHtml}
           </table>

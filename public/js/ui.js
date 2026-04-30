@@ -393,7 +393,9 @@ async function calculateAndShow() {
   // Store result for quiz/snapshot
   window._lastCalcResult = r;
 
-  // Save valuation to backend
+  // Save valuation to backend — server re-runs the calculator from these
+  // inputs and persists every derived field (multiples, valuations,
+  // trajectory, factors, recs). Do NOT send computed values from the client.
   saveValuation({
     business_name: bizName, industry,
     city: document.getElementById('city').value || '',
@@ -404,11 +406,6 @@ async function calculateAndShow() {
     earnings: payload.earnings ?? null, interest_expense: payload.interest_expense ?? null,
     taxes_paid: payload.taxes_paid ?? null, depreciation_amort: payload.depreciation_amort ?? null,
     owner_salary: ownerSal, market_salary: marketSal, addbacks,
-    adj_ebitda: r.adj_ebitda, base_multiple: r.base_multiple,
-    estimated_multiple: r.estimated_multiple, years_bonus: r.years_bonus,
-    revenue_scale_bonus: r.revenue_scale_bonus,
-    valuation_low: r.valuation_low, valuation_base: r.valuation_base, valuation_high: r.valuation_high,
-    value_score: r.value_score,
     growth_slider: growth, owner_dep_slider: ownerDep, recurring_slider: recurring,
     cust_conc_slider: custConc, systems_slider: systemsVal, fin_records_slider: finRec,
   });
@@ -1539,21 +1536,6 @@ async function updateValuationQuiz(quizData) {
       lead_email: quizData?.lead_email || _pendingLeadEmail || '',
       quiz_timeline: quizData?.quiz_timeline || '',
       quiz_advisory_source: quizData?.quiz_advisory_source || '',
-      email_content: {
-        business_name: document.getElementById('results-biz-name')?.textContent?.trim() || 'Your Business',
-        industry: document.getElementById('industry')?.value || 'other',
-        valuation_low: getResultNumber('val-low'),
-        valuation_base: getResultNumber('val-base'),
-        valuation_high: getResultNumber('val-high'),
-        value_score: getResultNumber('score-num'),
-        score_band: window._lastCalcResult?.score_band || '',
-        adj_ebitda: window._lastCalcResult?.adj_ebitda || 0,
-        estimated_multiple: window._lastCalcResult?.estimated_multiple || 0,
-        good_factors: (window._lastCalcResult?.good_factors || []).map(f => ({ name: f.name, description: f.description })),
-        bad_factors: (window._lastCalcResult?.bad_factors || []).map(f => ({ name: f.name, description: f.description })),
-        trajectory_top_factors: (window._lastCalcResult?.trajectory?.top_factors || []).map(f => ({ name: f.name, delta: f.delta })),
-        vip_recommendations: window._lastCalcResult?.vip_recommendations || [],
-      },
     };
 
     await apiSubmitQuiz(payload);
@@ -1572,28 +1554,12 @@ async function requestReport() {
   btn.innerHTML = '<span style="opacity:0.7;">Sending...</span>';
 
   try {
-    const r = window._lastCalcResult;
-    if (!r) throw new Error('No calculation result available');
+    if (!_currentValuationId) throw new Error('No saved valuation to send');
 
     const result = await apiSendReport({
       session_id: getOrCreateSessionId(),
       valuation_id: _currentValuationId,
       recipient_email: _pendingLeadEmail,
-      email_content: {
-        business_name: document.getElementById('results-biz-name')?.textContent?.trim() || 'Your Business',
-        industry: document.getElementById('industry')?.value || 'other',
-        valuation_low: r.valuation_low,
-        valuation_base: r.valuation_base,
-        valuation_high: r.valuation_high,
-        value_score: r.value_score,
-        score_band: r.score_band || '',
-        adj_ebitda: r.adj_ebitda,
-        estimated_multiple: r.estimated_multiple,
-        good_factors: (r.good_factors || []).map(f => ({ name: f.name, description: f.description })),
-        bad_factors: (r.bad_factors || []).map(f => ({ name: f.name, description: f.description })),
-        trajectory_top_factors: (r.trajectory?.top_factors || []).map(f => ({ name: f.name, delta: f.delta })),
-        vip_recommendations: r.vip_recommendations || [],
-      },
     });
 
     if (result?.ok) {

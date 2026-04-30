@@ -6,6 +6,7 @@ import {
   numeric,
   timestamp,
   index,
+  jsonb,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { sessions } from "./sessions.js";
@@ -51,6 +52,19 @@ export const valuations = pgTable(
     valuationBase: numeric("valuation_base"),
     valuationHigh: numeric("valuation_high"),
     valueScore: integer("value_score"),
+    scoreBand: text("score_band"),
+
+    // Trajectory projection (derived from sliders)
+    trajectoryUpliftAmount: numeric("trajectory_uplift_amount"),
+    trajectoryNewValuationLow: numeric("trajectory_new_valuation_low"),
+    trajectoryNewValuationBase: numeric("trajectory_new_valuation_base"),
+    trajectoryNewValuationHigh: numeric("trajectory_new_valuation_high"),
+    trajectoryTopFactors: jsonb("trajectory_top_factors"),
+
+    // Strengths / weaknesses / coaching content (derived from sliders)
+    goodFactors: jsonb("good_factors"),
+    badFactors: jsonb("bad_factors"),
+    vipRecommendations: jsonb("vip_recommendations"),
 
     // Slider values
     growthSlider: integer("growth_slider"),
