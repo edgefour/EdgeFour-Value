@@ -1552,6 +1552,10 @@ async function updateValuationQuiz(quizData) {
         good_factors: (window._lastCalcResult?.good_factors || []).map(f => ({ name: f.name, description: f.description })),
         bad_factors: (window._lastCalcResult?.bad_factors || []).map(f => ({ name: f.name, description: f.description })),
         trajectory_top_factors: (window._lastCalcResult?.trajectory?.top_factors || []).map(f => ({ name: f.name, delta: f.delta })),
+        trajectory_uplift: (window._lastCalcResult?.trajectory?.top_factors?.length > 0 && window._lastCalcResult?.trajectory) ? {
+          uplift_amount: window._lastCalcResult.trajectory.uplift_amount,
+          new_valuation_base: window._lastCalcResult.trajectory.new_valuation_base,
+        } : undefined,
         vip_recommendations: window._lastCalcResult?.vip_recommendations || [],
       },
     };
@@ -1592,6 +1596,10 @@ async function requestReport() {
         good_factors: (r.good_factors || []).map(f => ({ name: f.name, description: f.description })),
         bad_factors: (r.bad_factors || []).map(f => ({ name: f.name, description: f.description })),
         trajectory_top_factors: (r.trajectory?.top_factors || []).map(f => ({ name: f.name, delta: f.delta })),
+        trajectory_uplift: (r.trajectory?.top_factors?.length > 0 && r.trajectory) ? {
+          uplift_amount: r.trajectory.uplift_amount,
+          new_valuation_base: r.trajectory.new_valuation_base,
+        } : undefined,
         vip_recommendations: r.vip_recommendations || [],
       },
     });

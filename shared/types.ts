@@ -155,6 +155,10 @@ export type SubmitQuizRequest = {
     good_factors: Array<{ name: string; description: string }>
     bad_factors: Array<{ name: string; description: string }>
     trajectory_top_factors: Array<{ name: string; delta: number }>
+    trajectory_uplift?: {
+      uplift_amount: number
+      new_valuation_base: number
+    }
     vip_recommendations: Array<{ title: string; body: string }>
   }
 }
