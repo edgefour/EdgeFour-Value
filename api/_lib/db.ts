@@ -70,6 +70,15 @@ export async function updateValuation(
     valuation_base: 'valuationBase',
     valuation_high: 'valuationHigh',
     value_score: 'valueScore',
+    score_band: 'scoreBand',
+    trajectory_uplift_amount: 'trajectoryUpliftAmount',
+    trajectory_new_valuation_low: 'trajectoryNewValuationLow',
+    trajectory_new_valuation_base: 'trajectoryNewValuationBase',
+    trajectory_new_valuation_high: 'trajectoryNewValuationHigh',
+    trajectory_top_factors: 'trajectoryTopFactors',
+    good_factors: 'goodFactors',
+    bad_factors: 'badFactors',
+    vip_recommendations: 'vipRecommendations',
     lead_email: 'leadEmail',
     quiz_timeline: 'quizTimeline',
     quiz_advisory_source: 'quizAdvisorySource',
@@ -83,6 +92,8 @@ export async function updateValuation(
     'depreciationAmort', 'ownerSalary', 'marketSalary', 'addbacks',
     'adjEbitda', 'baseMultiple', 'estimatedMultiple', 'yearsBonus',
     'revenueScaleBonus', 'valuationLow', 'valuationBase', 'valuationHigh',
+    'trajectoryUpliftAmount', 'trajectoryNewValuationLow',
+    'trajectoryNewValuationBase', 'trajectoryNewValuationHigh',
   ])
 
   for (const [apiKey, schemaKey] of Object.entries(fieldMap)) {
@@ -188,6 +199,16 @@ export async function insertBooking(data: Record<string, unknown>) {
     scheduledEndAt: new Date(data.scheduled_end_at as string),
     calendlyEventId: data.calendly_event_id as string,
   })
+}
+
+export async function getValuationById(valuation_id: string) {
+  const result = await db
+    .select()
+    .from(valuations)
+    .where(eq(valuations.id, valuation_id))
+    .limit(1)
+
+  return result[0] ?? null
 }
 
 export async function lookupValuationByEmail(

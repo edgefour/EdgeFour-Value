@@ -111,9 +111,15 @@ export type SaveStep1Request = {
   employees?: number
 }
 
+// Inputs only — server runs the calculator and persists every derived field.
+// Client must NOT send adj_ebitda, multiples, valuations, or score; the server
+// computes all of those so the email and analytics queries share one source
+// of truth.
 export type SaveValuationRequest = {
   session_id: string
   valuation_id: string
+  industry: string
+  years_in_business: number
   input_mode: 'know' | 'calc'
   revenue: number
   ebitda: number
@@ -124,15 +130,6 @@ export type SaveValuationRequest = {
   owner_salary: number
   market_salary: number
   addbacks: number
-  adj_ebitda: number
-  base_multiple: number
-  estimated_multiple: number
-  years_bonus: number
-  revenue_scale_bonus: number
-  valuation_low: number
-  valuation_base: number
-  valuation_high: number
-  value_score: number
   sliders: SliderValues
 }
 
@@ -142,25 +139,12 @@ export type SubmitQuizRequest = {
   lead_email: string
   quiz_timeline: string
   quiz_advisory_source: string
-  email_content: {
-    business_name: string
-    industry: string
-    valuation_low: number
-    valuation_base: number
-    valuation_high: number
-    value_score: number
-    score_band: string
-    adj_ebitda: number
-    estimated_multiple: number
-    good_factors: Array<{ name: string; description: string }>
-    bad_factors: Array<{ name: string; description: string }>
-    trajectory_top_factors: Array<{ name: string; delta: number }>
-    trajectory_uplift?: {
-      uplift_amount: number
-      new_valuation_base: number
-    }
-    vip_recommendations: Array<{ title: string; body: string }>
-  }
+}
+
+export type SendReportRequest = {
+  session_id: string
+  valuation_id: string
+  recipient_email: string
 }
 
 export type TrackEventRequest = {

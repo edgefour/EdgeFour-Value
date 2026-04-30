@@ -11,6 +11,7 @@ import {
   insertFormEvent,
   updateEmailRecord,
   insertBooking,
+  getValuationById,
   lookupValuationByEmail,
   logError,
 } from './_lib/db.js'
@@ -21,6 +22,7 @@ import type {
   SaveSessionRequest,
   SaveStep1Request,
   SaveValuationRequest,
+  SendReportRequest,
   SubmitQuizRequest,
   TrackEventRequest,
 } from '../shared/types.js'
@@ -111,6 +113,9 @@ app.post('/calculate', async (c) => {
 })
 
 // ── save-valuation ──────────────────────────────────────────────────────────
+// Accepts only the raw inputs (sliders + financials) and re-runs the calculator
+// server-side. Persists every derived field so the email and analytics queries
+// can read from a single source of truth.
 app.post('/save-valuation', async (c) => {
   try {
     const body = (await c.req.json()) as SaveValuationRequest
@@ -121,6 +126,29 @@ app.post('/save-valuation', async (c) => {
         400,
       )
     }
+
+    const calcInput: CalculateInput = {
+      industry: body.industry,
+      years_in_business: body.years_in_business,
+      revenue: body.revenue,
+      ebitda: body.ebitda,
+      earnings: body.earnings,
+      interest_expense: body.interest_expense,
+      taxes_paid: body.taxes_paid,
+      depreciation_amort: body.depreciation_amort,
+      input_mode: body.input_mode,
+      owner_salary: body.owner_salary,
+      market_salary: body.market_salary,
+      addbacks: body.addbacks,
+      sliders: body.sliders,
+    }
+
+    const validation = validateCalculateInput(calcInput)
+    if (!validation.valid) {
+      return c.json({ error: validation.error }, 400)
+    }
+
+    const result = calculate(calcInput)
 
     await updateValuation(body.valuation_id, {
       input_mode: body.input_mode,
@@ -133,15 +161,24 @@ app.post('/save-valuation', async (c) => {
       owner_salary: body.owner_salary,
       market_salary: body.market_salary,
       addbacks: body.addbacks,
-      adj_ebitda: body.adj_ebitda,
-      base_multiple: body.base_multiple,
-      estimated_multiple: body.estimated_multiple,
-      years_bonus: body.years_bonus,
-      revenue_scale_bonus: body.revenue_scale_bonus,
-      valuation_low: body.valuation_low,
-      valuation_base: body.valuation_base,
-      valuation_high: body.valuation_high,
-      value_score: body.value_score,
+      adj_ebitda: result.adj_ebitda,
+      base_multiple: result.base_multiple,
+      estimated_multiple: result.estimated_multiple,
+      years_bonus: result.years_bonus,
+      revenue_scale_bonus: result.revenue_scale_bonus,
+      valuation_low: result.valuation_low,
+      valuation_base: result.valuation_base,
+      valuation_high: result.valuation_high,
+      value_score: result.value_score,
+      score_band: result.score_band,
+      trajectory_uplift_amount: result.trajectory.uplift_amount,
+      trajectory_new_valuation_low: result.trajectory.new_valuation_low,
+      trajectory_new_valuation_base: result.trajectory.new_valuation_base,
+      trajectory_new_valuation_high: result.trajectory.new_valuation_high,
+      trajectory_top_factors: result.trajectory.top_factors,
+      good_factors: result.good_factors,
+      bad_factors: result.bad_factors,
+      vip_recommendations: result.vip_recommendations,
       sliders: body.sliders,
       calculated_at: new Date().toISOString(),
     })
@@ -191,14 +228,13 @@ app.post('/submit-quiz', async (c) => {
 })
 
 // ── send-report ────────────────────────────────────────────────────────────
+// Builds the email entirely from the persisted valuation row. The client only
+// supplies identifiers + recipient — every dollar amount and bullet is derived
+// from the saved calculator result, so the email cannot be tampered with by a
+// malicious client and stays consistent with what's queryable for analytics.
 app.post('/send-report', async (c) => {
   try {
-    const body = (await c.req.json()) as {
-      session_id: string
-      valuation_id: string
-      recipient_email: string
-      email_content: SubmitQuizRequest['email_content']
-    }
+    const body = (await c.req.json()) as SendReportRequest
 
     if (!body.session_id || !body.valuation_id || !body.recipient_email) {
       return c.json(
@@ -212,13 +248,66 @@ app.post('/send-report', async (c) => {
       return c.json({ error: emailCheck.error }, 400)
     }
 
-    const html = buildReportEmail(body.email_content)
+    const v = await getValuationById(body.valuation_id)
+    if (!v) {
+      return c.json({ error: 'valuation not found' }, 404)
+    }
+
+    // Every field below must be populated before we can build the email.
+    // We refuse to render with placeholders so the recipient never sees
+    // "Your Business" or a zeroed-out valuation slipping through silently.
+    const required = {
+      businessName: v.businessName,
+      industry: v.industry,
+      valuationLow: v.valuationLow,
+      valuationBase: v.valuationBase,
+      valuationHigh: v.valuationHigh,
+      valueScore: v.valueScore,
+      scoreBand: v.scoreBand,
+      adjEbitda: v.adjEbitda,
+      estimatedMultiple: v.estimatedMultiple,
+      goodFactors: v.goodFactors,
+      badFactors: v.badFactors,
+      vipRecommendations: v.vipRecommendations,
+      trajectoryTopFactors: v.trajectoryTopFactors,
+      trajectoryUpliftAmount: v.trajectoryUpliftAmount,
+      trajectoryNewValuationBase: v.trajectoryNewValuationBase,
+    }
+    const missing = Object.entries(required).filter(([, val]) => val == null).map(([k]) => k)
+    if (missing.length > 0) {
+      await logError(body.session_id, 'send-report', `valuation ${body.valuation_id} missing fields: ${missing.join(', ')}`)
+      return c.json({ error: `valuation is incomplete; missing: ${missing.join(', ')}` }, 422)
+    }
+
+    const trajectoryTopFactors = v.trajectoryTopFactors as Array<{ name: string; delta: number }>
+
+    const html = buildReportEmail({
+      business_name: v.businessName!,
+      industry: v.industry!,
+      valuation_low: Number(v.valuationLow),
+      valuation_base: Number(v.valuationBase),
+      valuation_high: Number(v.valuationHigh),
+      value_score: v.valueScore!,
+      score_band: v.scoreBand!,
+      adj_ebitda: Number(v.adjEbitda),
+      estimated_multiple: Number(v.estimatedMultiple),
+      good_factors: v.goodFactors as Array<{ name: string; description: string }>,
+      bad_factors: v.badFactors as Array<{ name: string; description: string }>,
+      trajectory_top_factors: trajectoryTopFactors,
+      trajectory_uplift: trajectoryTopFactors.length > 0
+        ? {
+            uplift_amount: Number(v.trajectoryUpliftAmount),
+            new_valuation_base: Number(v.trajectoryNewValuationBase),
+          }
+        : undefined,
+      vip_recommendations: v.vipRecommendations as Array<{ title: string; body: string }>,
+    })
 
     await sendReport({
       session_id: body.session_id,
       valuation_id: body.valuation_id,
       recipient_email: body.recipient_email,
-      business_name: body.email_content.business_name,
+      business_name: v.businessName!,
       html,
     })
 
