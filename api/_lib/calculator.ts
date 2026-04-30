@@ -5,7 +5,7 @@
 
 import type { CalculateInput, CalculateResult } from '../../shared/types.js'
 
-// ── INDUSTRY MULTIPLES (114 entries) ────────────────────────────────────────
+// ── INDUSTRY MULTIPLES (111 entries) ────────────────────────────────────────
 export const industryMultiples: Record<string, number> = {
   restaurant_full: 2.0,
   restaurant_fast: 2.5,
@@ -89,11 +89,9 @@ export const industryMultiples: Record<string, number> = {
   real_estate_brokerage: 2.5,
   property_mgmt: 3.25,
   real_estate_appraisal: 2.75,
-  commercial_cleaning: 3.5,
   trucking_asset: 3.0,
   freight_brokerage: 3.75,
   last_mile: 3.0,
-  moving_transport: 2.5,
   warehousing: 4.0,
   auto_transport: 3.0,
   childcare: 4.5,
@@ -122,7 +120,7 @@ export const industryMultiples: Record<string, number> = {
   other: 3.25,
 }
 
-// ── OWNER DEPENDENCY BY SECTOR (114 entries) ────────────────────────────────
+// ── OWNER DEPENDENCY BY SECTOR (111 entries) ────────────────────────────────
 // Each array: [slider=1, slider=2, slider=3, slider=4, slider=5]
 // Source: docs/fix-ownerdependencyadjustments/Correct Ownership Dependency Adjustment_v4.24.26.numbers
 // Values are ×1.5 scaled from base profiles. L3 is always 0 (neutral).
@@ -218,12 +216,10 @@ export const ownerDepBySector: Record<string, number[]> = {
   real_estate_brokerage: [-2.5, -1.3, 0, 0.6, 0.9],
   property_mgmt: [-1.5, -0.75, 0, 0.38, 0.6],
   real_estate_appraisal: [-3.0, -1.8, 0, 0.6, 0.9],
-  commercial_cleaning: [-1.5, -0.75, 0, 0.38, 0.6],
   // Logistics & Transportation
   trucking_asset: [-1.5, -0.75, 0, 0.45, 0.75],
   freight_brokerage: [-1.5, -0.75, 0, 0.38, 0.6],
   last_mile: [-1.5, -0.75, 0, 0.45, 0.75],
-  moving_transport: [-1.5, -0.75, 0, 0.38, 0.6],
   warehousing: [-1.5, -0.75, 0, 0.45, 0.75],
   auto_transport: [-1.5, -0.75, 0, 0.45, 0.75],
   // Education & Childcare
@@ -368,9 +364,9 @@ const industryCategoryMap: Record<string, string> = {
   gc_commercial: 'Construction', gc_residential: 'Construction',
   contractor_mep: 'Construction', contractor_other: 'Construction',
   real_estate_brokerage: 'Real Estate', property_mgmt: 'Real Estate',
-  real_estate_appraisal: 'Real Estate', commercial_cleaning: 'Facility Services',
+  real_estate_appraisal: 'Real Estate',
   trucking_asset: 'Transportation', freight_brokerage: 'Transportation',
-  last_mile: 'Transportation', moving_transport: 'Transportation',
+  last_mile: 'Transportation',
   warehousing: 'Transportation', auto_transport: 'Transportation',
   childcare: 'Education', private_school: 'Education', tutoring: 'Education',
   vocational_school: 'Education', elearning: 'Education',
