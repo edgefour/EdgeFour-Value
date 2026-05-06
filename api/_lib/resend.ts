@@ -5,6 +5,7 @@ export type SendEmailParams = {
   subject: string
   html: string
   reply_to?: string
+  attachments?: Array<{ filename: string; content: Buffer }>
 }
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -16,6 +17,7 @@ export async function sendEmail(params: SendEmailParams) {
     subject: params.subject,
     html: params.html,
     replyTo: params.reply_to,
+    attachments: params.attachments,
   })
 
   if (error) {

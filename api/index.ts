@@ -17,6 +17,7 @@ import {
 } from './_lib/db.js'
 import { sendReport } from './_lib/send-email.js'
 import { buildReportEmail } from './_lib/email-template.js'
+import { buildFormAttachment } from './_lib/form-attachment.js'
 import type {
   CalculateInput,
   SaveSessionRequest,
@@ -313,12 +314,15 @@ app.post('/send-report', async (c) => {
       vip_recommendations: r.vipRecommendations as Array<{ title: string; body: string }>,
     })
 
+    const attachment = buildFormAttachment(v)
+
     await sendReport({
       session_id: body.session_id,
       valuation_id: body.valuation_id,
       recipient_email: body.recipient_email,
       business_name: r.businessName,
       html,
+      attachments: [attachment],
     })
 
     await updateValuation(body.valuation_id, {

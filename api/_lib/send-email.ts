@@ -12,6 +12,7 @@ export type SendReportParams = {
   recipient_email: string
   business_name: string
   html: string
+  attachments?: Array<{ filename: string; content: Buffer }>
 }
 
 export async function sendReport(params: SendReportParams) {
@@ -23,6 +24,7 @@ export async function sendReport(params: SendReportParams) {
       subject,
       html: params.html,
       reply_to: 'info@edgefourllc.com',
+      attachments: params.attachments,
     })
 
     await insertEmailRecord({
