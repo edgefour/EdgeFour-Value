@@ -215,7 +215,7 @@ app.post('/submit-quiz', async (c) => {
     }
 
     await updateValuation(body.valuation_id, {
-      lead_email: body.lead_email,
+      lead_email: emailCheck.trimmed,
       quiz_timeline: body.quiz_timeline,
       quiz_advisory_source: body.quiz_advisory_source,
     })
@@ -319,7 +319,7 @@ app.post('/send-report', async (c) => {
     await sendReport({
       session_id: body.session_id,
       valuation_id: body.valuation_id,
-      recipient_email: body.recipient_email,
+      recipient_email: emailCheck.trimmed,
       business_name: r.businessName,
       html,
       attachments: [attachment],

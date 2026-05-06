@@ -4,11 +4,12 @@ type ValidationResult = { valid: true } | { valid: false; error: string }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-export function validateEmail(email: string): ValidationResult {
-  if (!EMAIL_RE.test(email)) {
-    return { valid: false, error: 'Invalid email format' }
+export function validateEmail(email: string): ValidationResult & { trimmed: string } {
+  const trimmed = email.trim()
+  if (!EMAIL_RE.test(trimmed)) {
+    return { valid: false, error: 'Invalid email format', trimmed }
   }
-  return { valid: true }
+  return { valid: true, trimmed }
 }
 
 const BOUNDS: Record<string, { min: number; max: number }> = {
