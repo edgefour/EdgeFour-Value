@@ -347,11 +347,12 @@ app.post('/track-event', async (c) => {
     await insertFormEvent({
       session_id: body.session_id,
       event_type: body.event_type,
-      field_name: body.field_name ?? null,
-      old_value: body.old_value ?? null,
-      new_value: body.new_value ?? null,
       step: body.step,
-      duration_seconds: body.duration_seconds ?? null,
+      to_step: body.to_step ?? null,
+      field_name: body.field_name ?? null,
+      current_value: body.current_value ?? null,
+      step_duration_ms: body.step_duration_ms ?? null,
+      metadata: body.metadata ?? null,
     })
 
     await updateSession(body.session_id, { last_seen_at: new Date().toISOString() })

@@ -150,9 +150,10 @@ export type SendReportRequest = {
 export type TrackEventRequest = {
   session_id: string
   event_type: FormEventType
-  field_name?: string
-  old_value?: string
-  new_value?: string
   step: FurthestStep
-  duration_seconds?: number
+  to_step?: FurthestStep
+  field_name?: string
+  current_value?: string
+  step_duration_ms?: number
+  metadata?: Record<string, unknown>
 }
