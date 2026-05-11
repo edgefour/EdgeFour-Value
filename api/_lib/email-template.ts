@@ -39,7 +39,7 @@ function escapeHtml(s: string): string {
     .replace(/"/g, '&quot;')
 }
 
-const INDUSTRY_LABELS: Record<string, string> = {
+export const INDUSTRY_LABELS: Record<string, string> = {
   restaurant_full: 'Full-Service Restaurant', restaurant_fast: 'Fast Casual / QSR',
   catering: 'Catering', food_mfg: 'Food Manufacturing', bakery: 'Bakery',
   retail_general: 'General Retail', retail_specialty: 'Specialty Retail',
