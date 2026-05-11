@@ -51,15 +51,15 @@ function trackEvent(data) {
 }
 
 function goTo(sectionId) {
-  // Track navigation: what step they came from and how long they spent
-  const prevStep = _sectionToStep[_activeSection] || 'landing';
-  const nextStep = _sectionToStep[sectionId] || sectionId;
-  const duration = Math.max(0, Math.round((Date.now() - _stepEnteredAt) / 1000));
+  const fromStep = _sectionToStep[_activeSection] || 'landing';
+  const toStep = _sectionToStep[sectionId] || sectionId;
+  const durationMs = Math.max(0, Date.now() - _stepEnteredAt);
   const isBack = (steps[sectionId] || 0) < (steps[_activeSection] || 0);
   trackEvent({
     event_type: isBack ? 'step_back' : 'step_advance',
-    step: nextStep,
-    duration_seconds: duration,
+    step: fromStep,
+    to_step: toStep,
+    step_duration_ms: durationMs,
   });
   _stepEnteredAt = Date.now();
 
@@ -91,14 +91,15 @@ function _debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setT
     if (!el) continue;
     const evtType = el.tagName === 'SELECT' ? 'change' : 'blur';
     el.addEventListener(evtType, () => {
-      trackEvent({ event_type: 'field_change', field_name: id, new_value: el.value, step });
+      if (!el.value) return;
+      trackEvent({ event_type: 'field_change', field_name: id, current_value: el.value, step });
     });
   }
   // Track state custom dropdown
   const stateVal = document.getElementById('state-value');
   if (stateVal) {
     new MutationObserver(() => {
-      if (stateVal.value) trackEvent({ event_type: 'field_change', field_name: 'state', new_value: stateVal.value, step: 'business_info' });
+      if (stateVal.value) trackEvent({ event_type: 'field_change', field_name: 'state', current_value: stateVal.value, step: 'business_info' });
     }).observe(stateVal, { attributes: true, attributeFilter: ['value'] });
   }
   // Track slider changes (debounced)
@@ -106,10 +107,10 @@ function _debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setT
     const el = document.getElementById(id);
     if (!el) return;
     el.addEventListener('input', _debounce(() => {
-      trackEvent({ event_type: 'field_change', field_name: id, new_value: el.value, step: 'value_drivers' });
+      trackEvent({ event_type: 'field_change', field_name: id, current_value: el.value, step: 'value_drivers' });
     }, 500));
   });
-});
+})();
 
 function updateProgress(sectionId) {
   _activeSection = sectionId;
@@ -393,6 +394,17 @@ async function calculateAndShow() {
   // Store result for quiz/snapshot
   window._lastCalcResult = r;
 
+  trackEvent({
+    event_type: 'recalculate',
+    step: _sectionToStep[_activeSection] || 'value_drivers',
+    metadata: {
+      valuation_low: r.valuation_low,
+      valuation_base: r.valuation_base,
+      valuation_high: r.valuation_high,
+      value_score: r.value_score,
+    },
+  });
+
   // Save valuation to backend — server re-runs the calculator from these
   // inputs and persists every derived field (multiples, valuations,
   // trajectory, factors, recs). Do NOT send computed values from the client.
@@ -422,6 +434,11 @@ function formatMoney(n) {
 }
 
 function restartApp() {
+  trackEvent({
+    event_type: 'restart',
+    step: _sectionToStep[_activeSection] || 'results',
+    metadata: { from_step: _sectionToStep[_activeSection] || 'results' },
+  });
   // Reset city/state fields
   const stateInput = document.getElementById('state-input');
   if (stateInput) { stateInput.value = ''; stateInput.classList.remove('state-selected'); }
@@ -949,6 +966,17 @@ function setFinancialMode(mode) {
   const knowCard = document.getElementById('mode-know');
   const calcCard = document.getElementById('mode-calc');
 
+  const previousMode = knowBtn.classList.contains('active') ? 'know' : 'calc';
+  if (previousMode !== mode) {
+    trackEvent({
+      event_type: 'mode_switch',
+      step: 'financials',
+      field_name: 'financial_mode',
+      current_value: mode,
+      metadata: { previous_mode: previousMode },
+    });
+  }
+
   if (mode === 'know') {
     knowBtn.classList.add('active');
     calcBtn.classList.remove('active');
@@ -1272,6 +1300,7 @@ function validateBizInfoAndContinue() {
       document.getElementById('methodology-early-title').textContent = notice.title;
       document.getElementById('methodology-early-body').innerHTML = notice.body;
       document.getElementById('methodology-early-popup').style.display = 'flex';
+      trackEvent({ event_type: 'popup_opened', step: 'business_info', metadata: { popup_id: 'methodology_early' } });
     } else {
       goTo('section-financials');
     }
@@ -1280,6 +1309,7 @@ function validateBizInfoAndContinue() {
 
 function closeMethodologyPopupAndContinue() {
   document.getElementById('methodology-early-popup').style.display = 'none';
+  trackEvent({ event_type: 'popup_dismissed', step: 'business_info', metadata: { popup_id: 'methodology_early' } });
   goTo('section-financials');
 }
 
@@ -1441,10 +1471,12 @@ document.addEventListener('keydown', e => {
 function showAwarenessPopup() {
   document.getElementById('awareness-popup').style.display = 'flex';
   document.body.style.overflow = 'hidden';
+  trackEvent({ event_type: 'popup_opened', step: _sectionToStep[_activeSection] || 'results', metadata: { popup_id: 'awareness' } });
 }
 function closeAwarenessPopup() {
   document.getElementById('awareness-popup').style.display = 'none';
   document.body.style.overflow = '';
+  trackEvent({ event_type: 'popup_dismissed', step: _sectionToStep[_activeSection] || 'results', metadata: { popup_id: 'awareness' } });
 }
 function closeAwarenessPopupAndContinue() {
   closeAwarenessPopup();
