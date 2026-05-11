@@ -314,7 +314,7 @@ app.post('/send-report', async (c) => {
       vip_recommendations: r.vipRecommendations as Array<{ title: string; body: string }>,
     })
 
-    const attachment = buildFormAttachment(v)
+    const attachment = await buildFormAttachment(v)
 
     await sendReport({
       session_id: body.session_id,
