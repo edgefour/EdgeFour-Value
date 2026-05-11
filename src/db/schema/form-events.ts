@@ -3,6 +3,7 @@ import {
   uuid,
   text,
   integer,
+  jsonb,
   timestamp,
   index,
 } from "drizzle-orm/pg-core";
@@ -27,11 +28,12 @@ export const formEvents = pgTable(
       .default(sql`gen_random_uuid()`),
     sessionId: uuid("session_id").notNull(),
     eventType: text("event_type", { enum: eventTypeEnum }).notNull(),
-    fieldName: text("field_name"),
-    oldValue: text("old_value"),
-    newValue: text("new_value"),
     step: text("step").notNull(),
-    durationSeconds: integer("duration_seconds"),
+    toStep: text("to_step"),
+    fieldName: text("field_name"),
+    currentValue: text("current_value"),
+    stepDurationMs: integer("step_duration_ms"),
+    metadata: jsonb("metadata"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .default(sql`now()`),

@@ -11,6 +11,7 @@ import {
   bookings,
   functionErrors,
 } from '../../src/db/schema/index.js'
+import { eventTypeEnum } from '../../src/db/schema/form-events.js'
 import { eq } from 'drizzle-orm'
 
 export async function insertSession(data: Record<string, unknown>) {
@@ -160,12 +161,13 @@ export async function updateSession(
 export async function insertFormEvent(data: Record<string, unknown>) {
   await db.insert(formEvents).values({
     sessionId: data.session_id as string,
-    eventType: data.event_type as string,
-    fieldName: (data.field_name as string) ?? null,
-    oldValue: (data.old_value as string) ?? null,
-    newValue: (data.new_value as string) ?? null,
+    eventType: data.event_type as typeof eventTypeEnum[number],
     step: data.step as string,
-    durationSeconds: data.duration_seconds != null ? Number(data.duration_seconds) : null,
+    toStep: (data.to_step as string) ?? null,
+    fieldName: (data.field_name as string) ?? null,
+    currentValue: (data.current_value as string) ?? null,
+    stepDurationMs: data.step_duration_ms != null ? Number(data.step_duration_ms) : null,
+    metadata: (data.metadata as Record<string, unknown>) ?? null,
   })
 }
 
