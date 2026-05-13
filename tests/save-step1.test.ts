@@ -17,6 +17,20 @@ describe('save-step1', () => {
     expect(typeof body.valuation_id).toBe('string')
   })
 
+  test('creates missing session implicitly to avoid race with save-session', async () => {
+    const res = await post('/api/save-step1', {
+      session_id: crypto.randomUUID(),
+      business_name: 'Race Safe Co',
+      industry: 'other',
+      years_in_business: 2,
+      employees: 4,
+    })
+    expect(res.status).toBe(200)
+    const body = (await json(res)) as { valuation_id: string }
+    expect(body.valuation_id).toBeDefined()
+    expect(typeof body.valuation_id).toBe('string')
+  })
+
   test('returns 400 when business_name is missing', async () => {
     const res = await post('/api/save-step1', {
       session_id: crypto.randomUUID(),
