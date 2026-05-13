@@ -12,7 +12,7 @@ import {
   functionErrors,
 } from '../../src/db/schema/index.js'
 import { eventTypeEnum } from '../../src/db/schema/form-events.js'
-import { eq } from 'drizzle-orm'
+import { desc, eq } from 'drizzle-orm'
 
 export async function insertSession(data: Record<string, unknown>) {
   await db.insert(sessions).values({
@@ -226,6 +226,7 @@ export async function lookupValuationByEmail(
     .select({ sessionId: valuations.sessionId, id: valuations.id })
     .from(valuations)
     .where(eq(valuations.leadEmail, email))
+    .orderBy(desc(valuations.createdAt))
     .limit(1)
 
   if (result.length === 0) return null

@@ -76,6 +76,11 @@ app.post('/save-step1', async (c) => {
       )
     }
 
+    // Defensive upsert: the client calls /save-session on load, but that request
+    // is fire-and-forget. If /save-step1 arrives first, this guarantees the FK
+    // on valuations.session_id still has a parent row.
+    await insertSession({ session_id: body.session_id })
+
     const { valuation_id } = await insertValuation({
       session_id: body.session_id,
       business_name: body.business_name,

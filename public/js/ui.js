@@ -75,6 +75,10 @@ let _activeSection = 'section-landing';
 // ---- FIELD-LEVEL TRACKING ----
 // Debounce helper for slider tracking
 function _debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+function formatFieldTrackingValue(n) {
+  if (!Number.isFinite(n)) return '';
+  return n.toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
 
 // Module scripts are deferred — DOM is ready when this runs
 (function() {
@@ -315,6 +319,7 @@ async function calculateAndShow() {
     payload.interest_expense = parseCurrency((document.getElementById('g-interest') || {value:''}).value) || 0;
     payload.taxes_paid = parseCurrency((document.getElementById('g-taxes') || {value:''}).value) || 0;
     payload.depreciation_amort = parseCurrency((document.getElementById('g-da') || {value:''}).value) || 0;
+    trackGuidedEbitdaFieldChange(true);
   }
 
   // Call backend calculator
@@ -626,12 +631,46 @@ function buildSnapshot() {
   goTo('section-vip-snapshot');
 }
 // ---- FINANCIAL INPUT MODE TOGGLE ----
-// ---- INDUSTRY-AWARE GUIDED EBITDA CALCULATOR ----
+// ---- GUIDED EBITDA CALCULATOR ----
+// Uses a fixed four-input EBITDA builder:
+// Earnings + Interest + Taxes + Depreciation & Amortization
 
-// Industry-aware guided EBITDA calculators
-// Product businesses: Revenue - COGS - OpEx + D&A
-// Service businesses: Revenue - OpEx + D&A
-// Default fallback: Revenue - COGS - OpEx + D&A (product-style)
+const EBITDA_GUIDED_CONFIG = {
+  icon: '🧮',
+  title: 'EBITDA Calculator',
+  sub: 'EBITDA starts with earnings, then adds back interest, taxes, depreciation, and amortization. Estimates are fine.',
+  fields: [
+    {
+      id: 'g-earnings',
+      label: 'Annual Earnings (Net Income)',
+      placeholder: 'e.g., 180,000',
+      sign: +1,
+      helper: 'Enter your earnings, otherwise known as Net Income or Net Profit from your income statement or Profit & Loss statement.',
+    },
+    {
+      id: 'g-interest',
+      label: 'Interest',
+      placeholder: 'e.g., 25,000',
+      sign: +1,
+      helper: 'Enter total interest expense on business debt.<span class="field-note"><strong>Note:</strong> This will be added back in the EBITDA calculation, as financing decisions vary by owner and are not part of operating performance.</span>',
+    },
+    {
+      id: 'g-taxes',
+      label: 'Taxes',
+      placeholder: 'e.g., 40,000',
+      sign: +1,
+      helper: 'If Earnings include the payment of any state or federal income taxes, enter here.<span class="field-note"><strong>Note:</strong> This will be added back, as tax structures vary by owner and entity type.</span>',
+    },
+    {
+      id: 'g-da',
+      label: 'Depreciation & Amortization',
+      placeholder: 'e.g., 30,000',
+      sign: +1,
+      helper: 'Enter total depreciation and amortization expense.<span class="field-note"><strong>Note:</strong> These are non-cash expenses and will be added back to reflect operating earnings before capital structure and accounting treatments.</span>',
+    },
+  ],
+  formula: 'EBITDA = Earnings (Net Income) + Interest + Taxes + Depreciation & Amortization',
+};
 
 const GUIDED_CONFIGS = {
   _product: {
@@ -920,16 +959,17 @@ const INDUSTRY_TO_CONFIG = {
 };
 
 function getGuidedConfig() {
-  const industry = document.getElementById('industry').value || 'other';
-  const key = INDUSTRY_TO_CONFIG[industry] || '_default';
-  return GUIDED_CONFIGS[key];
+  return EBITDA_GUIDED_CONFIG;
 }
 
 function renderGuidedFields() {
-  const cfg = getGuidedConfig() || GUIDED_CONFIGS._default;
-  document.getElementById('guided-intro-icon').textContent  = cfg.icon || '🧮';
-  document.getElementById('guided-intro-title').textContent = cfg.title;
-  document.getElementById('guided-intro-sub').textContent   = cfg.sub;
+  const cfg = getGuidedConfig() || EBITDA_GUIDED_CONFIG;
+  const introIconEl = document.getElementById('guided-intro-icon');
+  const introTitleEl = document.getElementById('guided-intro-title');
+  const introSubEl = document.getElementById('guided-intro-sub');
+  if (introIconEl && cfg.icon) introIconEl.textContent = cfg.icon;
+  if (introTitleEl) introTitleEl.textContent = cfg.title;
+  if (introSubEl) introSubEl.textContent = cfg.sub;
 
   const container = document.getElementById('guided-fields');
   let html = '';
@@ -939,7 +979,7 @@ function renderGuidedFields() {
     <div class="field-group">
       <label for="${f.id}">${f.label}</label>
       <div class="prefix-input"><span class="prefix">$</span>
-        <input type="text" id="${f.id}" inputmode="numeric" placeholder="${f.placeholder}" class="currency-input" autocomplete="off" oninput="formatCurrencyInput(this); recalcGuided()">
+        <input type="text" id="${f.id}" inputmode="numeric" placeholder="${f.placeholder}" class="currency-input" autocomplete="off" oninput="formatCurrencyInput(this); recalcGuided(); updateAdjEbitdaPreview();">
       </div>
       <span class="helper">${f.helper}</span>
     </div>`;
@@ -949,6 +989,17 @@ function renderGuidedFields() {
   html += `<div class="guided-formula"><span class="guided-formula-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline;vertical-align:middle;margin-right:8px;"><line x1="4" y1="7" x2="16" y2="7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="4" y1="13" x2="16" y2="13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>${cfg.formula}</div>`;
 
   container.innerHTML = html;
+
+  cfg.fields.forEach(f => {
+    const el = document.getElementById(f.id);
+    if (!el) return;
+    el.addEventListener('blur', () => {
+      if (!el.value) return;
+      trackEvent({ event_type: 'field_change', field_name: f.id, current_value: el.value, step: 'financials' });
+      trackGuidedEbitdaFieldChange(true);
+    });
+  });
+
   recalcGuided();
 }
 
@@ -1003,11 +1054,11 @@ function setFinancialMode(mode) {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
-  updateAdjEbitda();
+  updateAdjEbitdaPreview();
 }
 
 function calcGuidedEbitda() {
-  const cfg = getGuidedConfig() || GUIDED_CONFIGS._default;
+  const cfg = getGuidedConfig() || EBITDA_GUIDED_CONFIG;
   let ebitda = 0;
   cfg.fields.forEach(f => {
     const el = document.getElementById(f.id);
@@ -1017,8 +1068,28 @@ function calcGuidedEbitda() {
   return ebitda;
 }
 
+let _lastTrackedGuidedEbitda = null;
+let _guidedEbitdaTrackTimer = null;
+function trackGuidedEbitdaFieldChange(force = false) {
+  const cfg = getGuidedConfig() || EBITDA_GUIDED_CONFIG;
+  const hasAny = cfg.fields.some(f => parseCurrency((document.getElementById(f.id) || { value: '' }).value) !== 0);
+  if (!hasAny) {
+    _lastTrackedGuidedEbitda = null;
+    return;
+  }
+  const trackedValue = formatFieldTrackingValue(calcGuidedEbitda());
+  if (!trackedValue) return;
+  if (!force && trackedValue === _lastTrackedGuidedEbitda) return;
+  _lastTrackedGuidedEbitda = trackedValue;
+  trackEvent({ event_type: 'field_change', field_name: 'ebitda', current_value: trackedValue, step: 'financials' });
+}
+function scheduleGuidedEbitdaTracking() {
+  clearTimeout(_guidedEbitdaTrackTimer);
+  _guidedEbitdaTrackTimer = setTimeout(() => trackGuidedEbitdaFieldChange(false), 450);
+}
+
 function recalcGuided() {
-  const cfg = getGuidedConfig() || GUIDED_CONFIGS._default;
+  const cfg = getGuidedConfig() || EBITDA_GUIDED_CONFIG;
   const ebitda   = calcGuidedEbitda();
   const resultEl = document.getElementById('guided-result');
   const valEl    = document.getElementById('guided-ebitda-display');
@@ -1032,8 +1103,7 @@ function recalcGuided() {
   });
 
   // Revenue field for margin calculation (first field with sign +1 and id containing 'revenue')
-  const revField = cfg.fields.find(f => f.id === 'g-revenue-calc');
-  const rev = revField ? parseCurrency((document.getElementById(revField.id) || {value:''}).value) : 0;
+  const rev = parseCurrency((document.getElementById('g-revenue-calc') || { value: '' }).value);
 
   if (hasAny) {
     resultEl.style.display = 'flex';
@@ -1047,6 +1117,8 @@ function recalcGuided() {
   } else {
     resultEl.style.display = 'none';
   }
+
+  scheduleGuidedEbitdaTracking();
 }
 
 // ---- FINANCIALS STEP VALIDATION (mode-aware) ----
