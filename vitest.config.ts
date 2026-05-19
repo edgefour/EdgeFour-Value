@@ -16,7 +16,6 @@ export default defineConfig({
       RESEND_API_KEY: 'test',
       RESEND_WEBHOOK_SECRET: 'test',
       CALENDLY_WEBHOOK_SECRET: 'test',
-      EDGEFOUR_TEST_WEBHOOK_BYPASS_TOKEN: 'edgefour-test-bypass',
       ALLOWED_ORIGIN: 'http://localhost:8888',
     },
   },

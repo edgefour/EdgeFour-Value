@@ -1,4 +1,4 @@
-import { Hono, type Context } from 'hono'
+import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { createHmac, timingSafeEqual } from 'node:crypto'
@@ -39,13 +39,6 @@ function safeEqual(a: string, b: string): boolean {
   return timingSafeEqual(aBuf, bBuf)
 }
 
-function hasTestWebhookBypass(c: Context): boolean {
-  const bypassToken = process.env.EDGEFOUR_TEST_WEBHOOK_BYPASS_TOKEN
-  return process.env.NODE_ENV === 'test'
-    && !!bypassToken
-    && c.req.header('x-edgefour-test-webhook-signature') === bypassToken
-}
-
 function verifyCalendlyWebhookSignature(
   rawBody: string,
   signatureHeader: string | undefined,
@@ -54,14 +47,20 @@ function verifyCalendlyWebhookSignature(
 ): boolean {
   if (!signatureHeader) return false
 
+  // Split on the FIRST '=' only — Calendly currently uses hex digests (no '='
+  // in values) but base64 schemes would have padding. Slicing keeps us
+  // forward-compatible without silently corrupting the value.
   const fields = signatureHeader
     .split(',')
     .map((part) => part.trim())
     .filter(Boolean)
     .reduce<Record<string, string>>((acc, part) => {
-      const [key, value] = part.split('=')
+      const eq = part.indexOf('=')
+      if (eq <= 0) return acc
+      const key = part.slice(0, eq).trim()
+      const value = part.slice(eq + 1).trim()
       if (!key || !value) return acc
-      acc[key.trim()] = value.trim()
+      acc[key] = value
       return acc
     }, {})
 
@@ -437,22 +436,20 @@ app.post('/resend-webhook', async (c) => {
       return c.json({ error: 'Webhook secret is not configured' }, 500)
     }
 
-    if (!hasTestWebhookBypass(c)) {
-      const { Resend } = await import('resend')
-      const resend = new Resend(process.env.RESEND_API_KEY)
-      try {
-        resend.webhooks.verify({
-          payload: rawBody,
-          headers: {
-            id: c.req.header('svix-id') ?? '',
-            timestamp: c.req.header('svix-timestamp') ?? '',
-            signature: c.req.header('svix-signature') ?? '',
-          },
-          webhookSecret,
-        })
-      } catch {
-        return c.json({ error: 'Invalid webhook signature' }, 401)
-      }
+    const { Resend } = await import('resend')
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    try {
+      resend.webhooks.verify({
+        payload: rawBody,
+        headers: {
+          id: c.req.header('svix-id') ?? '',
+          timestamp: c.req.header('svix-timestamp') ?? '',
+          signature: c.req.header('svix-signature') ?? '',
+        },
+        webhookSecret,
+      })
+    } catch {
+      return c.json({ error: 'Invalid webhook signature' }, 401)
     }
 
     const body = JSON.parse(rawBody) as {
@@ -501,12 +498,10 @@ app.post('/calendly-webhook', async (c) => {
     }
 
     const rawBody = await c.req.text()
-    if (!hasTestWebhookBypass(c)) {
-      const signatureHeader = c.req.header('calendly-webhook-signature') ?? undefined
-      const isValid = verifyCalendlyWebhookSignature(rawBody, signatureHeader, webhookSecret)
-      if (!isValid) {
-        return c.json({ error: 'Invalid webhook signature' }, 401)
-      }
+    const signatureHeader = c.req.header('calendly-webhook-signature') ?? undefined
+    const isValid = verifyCalendlyWebhookSignature(rawBody, signatureHeader, webhookSecret)
+    if (!isValid) {
+      return c.json({ error: 'Invalid webhook signature' }, 401)
     }
 
     const body = JSON.parse(rawBody) as {
