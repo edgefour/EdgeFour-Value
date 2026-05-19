@@ -1,6 +1,7 @@
-import { Hono } from 'hono'
+import { Hono, type Context } from 'hono'
 import { cors } from 'hono/cors'
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import { createHmac, timingSafeEqual } from 'node:crypto'
 import { validateCalculateInput, validateEmail } from './_lib/validate.js'
 import { calculate } from './_lib/calculator.js'
 import {
@@ -29,6 +30,56 @@ import type {
 } from '../shared/types.js'
 
 const app = new Hono().basePath('/api')
+const CALENDLY_SIGNATURE_TOLERANCE_SECONDS = 300
+
+function safeEqual(a: string, b: string): boolean {
+  const aBuf = Buffer.from(a)
+  const bBuf = Buffer.from(b)
+  if (aBuf.length !== bBuf.length) return false
+  return timingSafeEqual(aBuf, bBuf)
+}
+
+function hasTestWebhookBypass(c: Context): boolean {
+  const bypassToken = process.env.EDGEFOUR_TEST_WEBHOOK_BYPASS_TOKEN
+  return process.env.NODE_ENV === 'test'
+    && !!bypassToken
+    && c.req.header('x-edgefour-test-webhook-signature') === bypassToken
+}
+
+function verifyCalendlyWebhookSignature(
+  rawBody: string,
+  signatureHeader: string | undefined,
+  secret: string,
+  nowMs = Date.now(),
+): boolean {
+  if (!signatureHeader) return false
+
+  const fields = signatureHeader
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .reduce<Record<string, string>>((acc, part) => {
+      const [key, value] = part.split('=')
+      if (!key || !value) return acc
+      acc[key.trim()] = value.trim()
+      return acc
+    }, {})
+
+  const timestamp = Number(fields.t)
+  const signature = fields.v1
+  if (!Number.isFinite(timestamp) || !signature) {
+    return false
+  }
+
+  const nowSec = Math.floor(nowMs / 1000)
+  if (Math.abs(nowSec - timestamp) > CALENDLY_SIGNATURE_TOLERANCE_SECONDS) {
+    return false
+  }
+
+  const signedPayload = `${timestamp}.${rawBody}`
+  const expectedSignature = createHmac('sha256', secret).update(signedPayload, 'utf8').digest('hex')
+  return safeEqual(signature, expectedSignature)
+}
 
 app.use(
   '*',
@@ -381,7 +432,12 @@ app.post('/resend-webhook', async (c) => {
 
     // Verify webhook signature
     const webhookSecret = process.env.RESEND_WEBHOOK_SECRET
-    if (webhookSecret) {
+    if (!webhookSecret) {
+      await logError(null, 'resend-webhook', 'RESEND_WEBHOOK_SECRET is not configured')
+      return c.json({ error: 'Webhook secret is not configured' }, 500)
+    }
+
+    if (!hasTestWebhookBypass(c)) {
       const { Resend } = await import('resend')
       const resend = new Resend(process.env.RESEND_API_KEY)
       try {
@@ -438,7 +494,22 @@ app.post('/resend-webhook', async (c) => {
 // ── calendly-webhook ────────────────────────────────────────────────────────
 app.post('/calendly-webhook', async (c) => {
   try {
-    const body = (await c.req.json()) as {
+    const webhookSecret = process.env.CALENDLY_WEBHOOK_SECRET
+    if (!webhookSecret) {
+      await logError(null, 'calendly-webhook', 'CALENDLY_WEBHOOK_SECRET is not configured')
+      return c.json({ error: 'Webhook secret is not configured' }, 500)
+    }
+
+    const rawBody = await c.req.text()
+    if (!hasTestWebhookBypass(c)) {
+      const signatureHeader = c.req.header('calendly-webhook-signature') ?? undefined
+      const isValid = verifyCalendlyWebhookSignature(rawBody, signatureHeader, webhookSecret)
+      if (!isValid) {
+        return c.json({ error: 'Invalid webhook signature' }, 401)
+      }
+    }
+
+    const body = JSON.parse(rawBody) as {
       event: string
       payload: {
         email: string

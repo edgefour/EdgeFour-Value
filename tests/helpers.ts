@@ -1,12 +1,13 @@
 import { app } from '../api/index.js'
 
 /** POST JSON to the Hono app and return the Response. */
-export function post(path: string, body: unknown): Promise<Response> {
+export function post(path: string, body: unknown, headers: Record<string, string> = {}): Promise<Response> {
   return app.request(path, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Origin': 'http://localhost:8888',
+      ...headers,
     },
     body: JSON.stringify(body),
   })
