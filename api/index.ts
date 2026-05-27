@@ -493,8 +493,9 @@ app.post('/calendly-webhook', async (c) => {
   try {
     const webhookSecret = process.env.CALENDLY_WEBHOOK_SECRET
     if (!webhookSecret) {
-      await logError(null, 'calendly-webhook', 'CALENDLY_WEBHOOK_SECRET is not configured')
-      return c.json({ error: 'Webhook secret is not configured' }, 500)
+      // Temporary graceful mode: if Calendly signing isn't configured yet,
+      // acknowledge the webhook without persisting so user-facing flow is unaffected.
+      return c.json({ ok: true, skipped: 'missing_webhook_secret' })
     }
 
     const rawBody = await c.req.text()

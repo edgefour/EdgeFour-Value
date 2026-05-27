@@ -168,10 +168,11 @@ describe('calendly-webhook', () => {
     }
   })
 
-  test('returns 500 when webhook secret is missing', async () => {
+  test('returns ok+skipped when webhook secret is missing', async () => {
     await withEnv({ CALENDLY_WEBHOOK_SECRET: undefined }, async () => {
       const res = await postSigned({ event: 'invitee.canceled', payload: {} })
-      expect(res.status).toBe(500)
+      expect(res.status).toBe(200)
+      expect(await json(res)).toEqual({ ok: true, skipped: 'missing_webhook_secret' })
     })
   })
 })
