@@ -1,12 +1,23 @@
 import { describe, expect, test } from 'vitest'
-import { post, json } from './helpers.js'
+import { post, json, signCalendlyBody, withEnv } from './helpers.js'
 import { db } from '../src/db/index.js'
 import { bookings } from '../src/db/schema/index.js'
 import { eq } from 'drizzle-orm'
 
+/** Send a JSON body to /api/calendly-webhook signed with the env secret. */
+async function postSigned(
+  body: unknown,
+  { timestamp, secret }: { timestamp?: number; secret?: string } = {},
+): Promise<Response> {
+  const rawBody = JSON.stringify(body)
+  const signingSecret = secret ?? process.env.CALENDLY_WEBHOOK_SECRET ?? 'test'
+  const signature = signCalendlyBody(rawBody, signingSecret, timestamp)
+  return post('/api/calendly-webhook', body, { 'calendly-webhook-signature': signature }, rawBody)
+}
+
 describe('calendly-webhook', () => {
   test('handles invitee.created event', async () => {
-    const res = await post('/api/calendly-webhook', {
+    const res = await postSigned({
       event: 'invitee.created',
       payload: {
         email: 'test@example.com',
@@ -20,7 +31,7 @@ describe('calendly-webhook', () => {
   })
 
   test('ignores non-invitee.created events', async () => {
-    const res = await post('/api/calendly-webhook', { event: 'invitee.canceled', payload: {} })
+    const res = await postSigned({ event: 'invitee.canceled', payload: {} })
     expect(res.status).toBe(200)
     expect(await json(res)).toEqual({ ok: true })
   })
@@ -65,7 +76,7 @@ describe('calendly-webhook', () => {
     })
 
     const calendlyEventId = `calendly-event-${crypto.randomUUID()}`
-    const webhookRes = await post('/api/calendly-webhook', {
+    const webhookRes = await postSigned({
       event: 'invitee.created',
       payload: {
         email: leadEmail,
@@ -80,5 +91,88 @@ describe('calendly-webhook', () => {
     expect(booking).toBeDefined()
     expect(booking?.valuationId).toBe(stepTwoBody.valuation_id)
     expect(booking?.sessionId).toBe(sessionTwo)
+  })
+
+  test('returns 401 when webhook signature is missing', async () => {
+    const res = await post('/api/calendly-webhook', {
+      event: 'invitee.created',
+      payload: {
+        email: 'test@example.com',
+        event_type: { uuid: `calendly-event-${crypto.randomUUID()}` },
+        scheduled_event: { start_time: '2026-05-01T14:00:00Z', end_time: '2026-05-01T14:30:00Z' },
+      },
+    })
+    expect(res.status).toBe(401)
+  })
+
+  test('rejects stale Calendly signatures', async () => {
+    const staleTimestamp = Math.floor(Date.now() / 1000) - 1200
+    const res = await postSigned(
+      {
+        event: 'invitee.created',
+        payload: {
+          email: 'test@example.com',
+          event_type: { uuid: `calendly-event-${crypto.randomUUID()}` },
+          scheduled_event: { start_time: '2026-05-01T14:00:00Z', end_time: '2026-05-01T14:30:00Z' },
+        },
+      },
+      { timestamp: staleTimestamp },
+    )
+    expect(res.status).toBe(401)
+  })
+
+  test('rejects signatures generated with the wrong secret', async () => {
+    const res = await postSigned(
+      {
+        event: 'invitee.created',
+        payload: {
+          email: 'test@example.com',
+          event_type: { uuid: `calendly-event-${crypto.randomUUID()}` },
+          scheduled_event: { start_time: '2026-05-01T14:00:00Z', end_time: '2026-05-01T14:30:00Z' },
+        },
+      },
+      { secret: 'wrong-secret' },
+    )
+    expect(res.status).toBe(401)
+  })
+
+  test('rejects tampered bodies (signature valid for original body only)', async () => {
+    const body = {
+      event: 'invitee.created',
+      payload: {
+        email: 'test@example.com',
+        event_type: { uuid: `calendly-event-${crypto.randomUUID()}` },
+        scheduled_event: { start_time: '2026-05-01T14:00:00Z', end_time: '2026-05-01T14:30:00Z' },
+      },
+    }
+    const rawBody = JSON.stringify(body)
+    const signature = signCalendlyBody(rawBody, process.env.CALENDLY_WEBHOOK_SECRET ?? 'test')
+    const tamperedBody = rawBody.replace('test@example.com', 'attacker@example.com')
+    const res = await post(
+      '/api/calendly-webhook',
+      undefined,
+      { 'calendly-webhook-signature': signature },
+      tamperedBody,
+    )
+    expect(res.status).toBe(401)
+  })
+
+  test('rejects malformed signature headers', async () => {
+    for (const sig of ['', 't=,v1=', '=', 'v1=abc', 't=notanumber,v1=abc']) {
+      const res = await post(
+        '/api/calendly-webhook',
+        { event: 'invitee.canceled', payload: {} },
+        { 'calendly-webhook-signature': sig },
+      )
+      expect(res.status).toBe(401)
+    }
+  })
+
+  test('returns ok+skipped when webhook secret is missing', async () => {
+    await withEnv({ CALENDLY_WEBHOOK_SECRET: undefined }, async () => {
+      const res = await postSigned({ event: 'invitee.canceled', payload: {} })
+      expect(res.status).toBe(200)
+      expect(await json(res)).toEqual({ ok: true, skipped: 'missing_webhook_secret' })
+    })
   })
 })

@@ -25,7 +25,7 @@ const validInput: CalculateInput = {
 
 describe('validateEmail', () => {
   test('accepts valid email', () => {
-    expect(validateEmail('test@example.com')).toEqual({ valid: true })
+    expect(validateEmail('test@example.com')).toEqual({ valid: true, trimmed: 'test@example.com' })
   })
 
   test('rejects missing @', () => {

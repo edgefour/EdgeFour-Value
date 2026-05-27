@@ -39,6 +39,11 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 # Finder (MacOS) folder config
 .DS_Store
 
+# local DB backups (keep folder scaffold only)
+backups/**
+!backups/.gitkeep
+!backups/db/.gitkeep
+
 # Python (used by docs/valuation-model-spec)
 __pycache__/
 *.pyc
