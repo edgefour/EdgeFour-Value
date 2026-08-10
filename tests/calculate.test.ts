@@ -145,6 +145,22 @@ describe('calculator engine — value correctness', () => {
     expect(result.adj_ebitda).toBe(130_000)
   })
 
+  test('negative addbacks reduce adjEBITDA', () => {
+    const result = calculate({
+      industry: 'other',
+      years_in_business: 5,
+      revenue: 1_000_000,
+      ebitda: 200_000,
+      input_mode: 'know',
+      owner_salary: 100_000,
+      market_salary: 100_000,
+      addbacks: -15_000,
+      sliders: { growth: 3, owner_dep: 3, recurring: 3, cust_conc: 3, systems: 3, fin_records: 3 },
+    })
+
+    expect(result.adj_ebitda).toBe(185_000)
+  })
+
   test('unknown industry falls back to defaults', () => {
     const result = calculate({
       industry: 'nonexistent_industry',
