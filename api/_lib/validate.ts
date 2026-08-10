@@ -21,7 +21,8 @@ const BOUNDS: Record<string, { min: number; max: number }> = {
   depreciation_amort: { min: 0, max: 1_000_000_000 },
   owner_salary: { min: 0, max: 100_000_000 },
   market_salary: { min: 0, max: 100_000_000 },
-  addbacks: { min: 0, max: 1_000_000_000 },
+  // Negatives are intentional subtractions (non-recurring income / below-market rent, etc.)
+  addbacks: { min: -1_000_000_000, max: 1_000_000_000 },
   years_in_business: { min: 0, max: 200 },
 }
 

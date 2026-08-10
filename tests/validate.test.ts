@@ -67,6 +67,19 @@ describe('validateCalculateInput', () => {
     expect(r.valid).toBe(true)
   })
 
+  test('allows negative addbacks within bounds', () => {
+    const r = validateCalculateInput({ ...validInput, addbacks: -15_000 })
+    expect(r.valid).toBe(true)
+  })
+
+  test('rejects addbacks below min', () => {
+    const r = validateCalculateInput({
+      ...validInput,
+      addbacks: -1_000_000_001,
+    })
+    expect(r.valid).toBe(false)
+  })
+
   test('rejects ebitda below min', () => {
     const r = validateCalculateInput({
       ...validInput,
