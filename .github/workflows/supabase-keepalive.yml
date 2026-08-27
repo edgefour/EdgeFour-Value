@@ -10,8 +10,12 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Install PostgreSQL client
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
 
       - name: Ping Supabase database
         env:
@@ -32,8 +36,9 @@ jobs:
 
           STARTED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           echo "Starting Supabase keepalive at ${STARTED_AT}"
+          echo "Using postgres.js (same client as migrations) against DATABASE_URL"
 
-          RESULT="$(psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -tAc "SELECT 1 AS keepalive;")"
+          RESULT="$(bun run scripts/supabase-keepalive.ts)"
           RESULT="$(echo "$RESULT" | tr -d '[:space:]')"
 
           echo "Query result: ${RESULT}"
@@ -49,6 +54,7 @@ jobs:
               echo "- **Started (UTC):** ${STARTED_AT}"
               echo "- **Finished (UTC):** ${FINISHED_AT}"
               echo "- **Query:** \`SELECT 1\`"
+              echo "- **Client:** postgres.js"
               echo "- **Result:** \`${RESULT}\`"
             } >> "$GITHUB_STEP_SUMMARY"
             exit 1
@@ -64,5 +70,6 @@ jobs:
             echo "- **Started (UTC):** ${STARTED_AT}"
             echo "- **Finished (UTC):** ${FINISHED_AT}"
             echo "- **Query:** \`SELECT 1\`"
+            echo "- **Client:** postgres.js"
             echo "- **Result:** \`${RESULT}\`"
           } >> "$GITHUB_STEP_SUMMARY"
