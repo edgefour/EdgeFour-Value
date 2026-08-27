@@ -939,7 +939,7 @@ These are tradeoffs accepted as part of the free-tier scope:
 
 - **No rate limiting on functions** — free tier lacks this; mitigated by input validation and bounds
 - **10-second function timeout (Vercel Hobby)** — `submit-quiz` could time out if Resend is degraded; accepted
-- **Supabase pauses after 1 week idle** — first user after a quiet week hits cold start
+- **Supabase pauses after 1 week idle** — mitigated by `.github/workflows/supabase-keepalive.yml` (Mon/Thu `SELECT 1` via `DATABASE_URL`); restore in dashboard first if already paused
 - **No staging environment** — single `main` branch deploys straight to production
 - **No observability tooling beyond Vercel logs + `function_errors`**
 - **Session linking breaks across tabs** — two tabs = two `session_id`s, no user identity to reconcile
