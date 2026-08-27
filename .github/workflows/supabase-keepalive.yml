@@ -1,0 +1,68 @@
+name: Supabase Keepalive
+
+on:
+  schedule:
+    # Mon + Thu 15:00 UTC — well under the 7-day free-tier idle pause window
+    - cron: "0 15 * * 1,4"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install PostgreSQL client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+
+      - name: Ping Supabase database
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${DATABASE_URL:-}" ]; then
+            echo "::error::DATABASE_URL secret is not set"
+            {
+              echo "## Supabase keepalive"
+              echo ""
+              echo "- **Status:** failed"
+              echo "- **Reason:** \`DATABASE_URL\` secret missing"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          STARTED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "Starting Supabase keepalive at ${STARTED_AT}"
+
+          RESULT="$(psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -tAc "SELECT 1 AS keepalive;")"
+          RESULT="$(echo "$RESULT" | tr -d '[:space:]')"
+
+          echo "Query result: ${RESULT}"
+
+          FINISHED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+          if [ "$RESULT" != "1" ]; then
+            echo "::error::Unexpected query result (expected 1, got '${RESULT}')"
+            {
+              echo "## Supabase keepalive"
+              echo ""
+              echo "- **Status:** failed"
+              echo "- **Started (UTC):** ${STARTED_AT}"
+              echo "- **Finished (UTC):** ${FINISHED_AT}"
+              echo "- **Query:** \`SELECT 1\`"
+              echo "- **Result:** \`${RESULT}\`"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          echo "Keepalive succeeded — database responded to SELECT 1"
+          echo "Finished at ${FINISHED_AT}"
+
+          {
+            echo "## Supabase keepalive"
+            echo ""
+            echo "- **Status:** ok"
+            echo "- **Started (UTC):** ${STARTED_AT}"
+            echo "- **Finished (UTC):** ${FINISHED_AT}"
+            echo "- **Query:** \`SELECT 1\`"
+            echo "- **Result:** \`${RESULT}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
